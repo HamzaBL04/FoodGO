@@ -49,21 +49,21 @@ The full prioritised backlog (31 stories, MoSCoW, story points) is in `docs/requ
 
 ## 6. Methodology: Scrum with one-week sprints
 
-**Why Scrum and not Kanban.** The course imposes fixed, dated milestones (requirements, design, midterm MVP, final). Scrum's time-boxed sprints map onto those dates, and the sprint review is a natural checkpoint before each submission. The team is small (three members, with two doing most of the implementation), so a lightweight Scrum works: one person acts as Product Owner (owner of the specification and backlog) and the team self-organises. Kanban's continuous flow suits work that arrives unpredictably, like support tickets; our scope is known and our risk is the deadline, which Scrum makes visible.
+**Why Scrum and not Kanban.** The course imposes fixed, dated milestones (requirements, design, midterm MVP, final). Scrum's time-boxed sprints map onto those dates, and the sprint review is a natural checkpoint before each submission. The team is small (three registered members), so a lightweight Scrum fits: one Product Owner owns the specification and backlog, and the implementer pulls work from the sprint backlog. In practice the Sprint 1 implementation was carried out by one member (Hamza Ben Labiedh) working with an AI coding agent; see §7 and the AI usage log. Kanban's continuous flow suits work that arrives unpredictably, like support tickets; our scope is known and our risk is the deadline, which Scrum makes visible.
 
 **Why one-week sprints instead of the usual two.** Milestones are one to two weeks apart, and the remaining scope after the midterm is small and well understood. Short sprints mean feedback from the instructor reaches the backlog quickly.
 
-**Ceremonies:** sprint planning (Monday, 30 min), async daily stand-up in the team chat, review and retrospective at the end of each sprint. **Definition of done:** code merged through a pull request, CI green (lint and tests, coverage ≥ 60 %), acceptance criteria met, docs updated, AI use logged.
+**Ceremonies (planned from Sprint 2):** sprint planning at the start of each sprint, a short async stand-up in the team chat, review and retrospective at the end. Sprint 1 was a single intensive working session, so its planning was the written plan at the start of that session and its review was the pre-submission verification. **Definition of done:** code merged through a pull request, CI green (lint and tests, coverage ≥ 60 %), acceptance criteria met, docs updated, AI use logged.
 
-**AI in the process.** AI drafted the first user stories and estimates from the specification; the team validated and corrected them (record at the end of `BACKLOG.md`). AI also produced first drafts of code, diagrams and documentation, always merged through pull requests with human review and automated tests. See `docs/ai/AI_USAGE_LOG.md`.
+**AI in the process.** AI drafted the first user stories and estimates from the specification; the team validated and corrected them (record at the end of `BACKLOG.md`). AI also produced first drafts of code, diagrams and documentation. Every change went through a pull request gated by CI (lint, tests, coverage); in Sprint 1 the pull requests were self-merged after CI passed, without a second reviewer. Peer review of each PR by another member is planned from Sprint 2. See `docs/ai/AI_USAGE_LOG.md`.
 
 ## 7. Release plan
 
 | Sprint | Dates | Goal | Status |
 |---|---|---|---|
 | 0 | 14 Sep – 28 Sep | Requirements elicitation, specification (Lab 3), software design (Lab 4) | Done |
-| 1 | 26 Oct – 1 Nov | Midterm MVP: full pre-order flow for all four roles, AI forecast, CI, documentation | Done |
-| 2 | 2 Nov – 8 Nov | Refactoring and performance work with metrics, accessibility audit, deployment | Planned |
+| 1 | 1 Nov | Midterm MVP in one intensive session: full pre-order flow for all four roles, AI forecast, CI, documentation, first refactoring and performance pass with metrics | Done |
+| 2 | 2 Nov – 8 Nov | Peer review of the Sprint 1 code by all members, accessibility audit, deployment | Planned |
 | 3 | 9 Nov – 15 Nov | Stakeholder decisions on unresolved items (cancellation, failed delivery), real notifications | Planned |
 | 4 | 16 Nov – final | Hardening, final presentation, defence | Planned |
 
@@ -79,5 +79,5 @@ Following the SDD: a **layered** single deployable (presentation → business co
 |---|---|
 | Unresolved business rules (cancellation, refunds, failed delivery) | Not invented; State pattern leaves one extension point per decision |
 | No real payment provider selected (Q-22) | Sandbox adapter; a provider is one new adapter |
-| Over-reliance on AI-generated code | PR review, ≥ 60 % coverage gate, AI usage log, team walkthrough before the defence |
+| Over-reliance on AI-generated code | CI gate on every PR (lint, tests, ≥ 60 % coverage), AI usage log, peer review from Sprint 2, team code walkthrough before the defence |
 | Data privacy of customers | Restaurant-scoped queries, minimal data on the live stream, no personal data sent to the LLM |

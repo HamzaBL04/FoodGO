@@ -20,7 +20,7 @@ Every AI-assisted commit carries a `Co-Authored-By: Claude` trailer, and every p
 
 ## Log
 
-| Date | Step / PR | Prompt given to the AI (summary of the instruction) | Output | Flag | Human review and decisions |
+| Date | Step / PR | Task (the agent's own breakdown of the human prompts in the appendix) | Output | Flag | Human decisions |
 |---|---|---|---|---|---|
 | 1 Nov 2026 | Planning | "Read the specification deck, the SDD and the LMS pages; tell me everything you need to complete the midterm progress submission; make a plan first." | Gap analysis and plan (MVP, video, repo, docs) | Direct | Hamza confirmed no code existed, created the `foodGO` repo, chose the team list, approved the Node.js stack, **withdrew assumption A-13** (AI out of scope) |
 | 1 Nov 2026 | Bootstrap commit | "Set up a Node.js project with lint, CI with a coverage gate and the Lab 3/4 documents in /docs." | `package.json`, ESLint, CI workflow, style guide, error model | Direct | Node 22 minimum accepted after the AI found `better-sqlite3` needs it |
@@ -46,3 +46,21 @@ Every AI-assisted commit carries a `Co-Authored-By: Claude` trailer, and every p
 - Business rules marked UNRESOLVED in the specification (cancellation, refunds, failed delivery, real payment provider) were **not** invented.
 - Withdrawing A-13 and adding FR-31 was a team decision, recorded in the backlog and in PR #7.
 - The team list, the repository, and the choice to submit were the team's.
+
+## Appendix A — the human prompts, verbatim
+
+The whole implementation came from one working session in the Claude app on 1 Nov 2026. The member directing it wrote these prompts (typos kept). The per-PR "tasks" in the log above are the agent's own breakdown of them, not separate human prompts.
+
+1. With the Lab 3 specification deck and the Lab 4 SDD attached:
+   > I have a course called "AI first software engineering" in which we need to develop a project. I am providing you with the projects requirements and documents, that we should fill.
+2. With a screen recording of the course page:
+   > Read everything carefully, and tell me anything you need to read or to fill, in order to complete this project, the selected text in the end is the submission needed today, and by the way the documents I sent earlier is my project with my teammates. I have created a project in here, lets make a plan first so we move to the project
+3. With a screen recording of the "Midterm Progress Submission" page:
+   > excuse me this is what we need instead
+4. With the "Midterm Instructions" page attached:
+   > 1. 2.theres no code yet 3.repo created named foodGO 3.hamza ben labiedh, ali chamakh, mohamed krid. (but it will only be me and you (hamza)no need to get them involved they wont do the work) 5.I dont have them 6.go ahead. Also ignore A-13.
+
+## Appendix B — prompts the agent gave to helper agents
+
+- **OpenAPI specification (PR #8).** "Write a complete, accurate OpenAPI 3.0.3 specification for the FoodGO REST API and save it to docs/api/openapi.yaml … Read these files to get every route, method, request body, response shape, auth rule and error … Every operation: operationId, summary, a one-line description naming the requirement IDs found in code comments … When done, validate … cross-check that every router.get/post/put/patch/delete in src/api/routes appears in the spec." Output used directly; validated by swagger-parser and Ajv.
+- **Independent pre-submission review.** "You are an independent reviewer (a strict teaching assistant) checking a student team's midterm submission BEFORE it is submitted … follow ONLY the README … exercise the main flow over HTTP … check every relative link … anything in the docs that over-claims or contradicts the code." Its findings led to PR #12 (process claims corrected, coverage scope stated, traceability fixed, demo mode off in production).

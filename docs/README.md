@@ -20,6 +20,6 @@ Mapped to the CS 488 midterm instructions (submission checklist §5 and rubric �
 | **User guide** | [USER_GUIDE.md](USER_GUIDE.md) |
 | **AI usage log** (tools, prompts, direct outputs flagged) | [ai/AI_USAGE_LOG.md](ai/AI_USAGE_LOG.md) |
 | **Ethics & AI usage reflection** | [ai/ETHICS_AND_AI_REFLECTION.md](ai/ETHICS_AND_AI_REFLECTION.md) |
-| **Signed academic honesty statement** | [ACADEMIC_HONESTY_STATEMENT.md](ACADEMIC_HONESTY_STATEMENT.md) — to be signed by each member |
-| Recorded demo | Link in the LMS submission; script in [`demo/`](../demo) |
+| **Signed academic honesty statement** | [ACADEMIC_HONESTY_STATEMENT.md](ACADEMIC_HONESTY_STATEMENT.md) — with a who-did-what table; each member signs |
+| **Recorded demo** | [demo/foodgo-demo.mp4](../demo/foodgo-demo.mp4) (2 min, captioned) · [storyboard and re-recording](../demo/README.md) |
 | Final presentation slides | Final submission (not part of the midterm progress milestone) |

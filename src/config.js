@@ -15,7 +15,8 @@ const config = {
   dbFile: process.env.FOODGO_DB || path.join(__dirname, '..', 'data', 'foodgo.db'),
   // Demo mode shows the one-time password on screen, because no real SMS
   // provider is integrated (provider selection is unresolved, Q-22 / §5.2.2).
-  demoMode: process.env.FOODGO_DEMO_MODE !== 'false',
+  // Off by default in production so a forgotten variable can never expose codes.
+  demoMode: process.env.FOODGO_DEMO_MODE ? process.env.FOODGO_DEMO_MODE === 'true' : env !== 'production',
   bcryptRounds: env === 'test' ? 4 : 10,
   sessionTtlHours: 12,
   otpTtlMinutes: 5,

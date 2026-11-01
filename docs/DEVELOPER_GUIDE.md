@@ -48,7 +48,7 @@ Configuration (environment variables, all optional):
 | `PORT` | `3000` | HTTP port |
 | `FOODGO_DB` | `data/foodgo.db` | SQLite file |
 | `TZ` | `Africa/Tunis` | Time zone of the ordering deadline |
-| `FOODGO_DEMO_MODE` | `true` | Show the SMS code on screen (no real SMS provider). Set `false` in production. |
+| `FOODGO_DEMO_MODE` | `true`, but `false` when `NODE_ENV=production` | Show the SMS code on screen (no real SMS provider yet) |
 | `ANTHROPIC_API_KEY` | empty | Enables the Claude-written forecast note |
 | `ANTHROPIC_MODEL` | `claude-haiku-5-5` | Model for that note |
 | `NODE_ENV` | `development` | `production` makes the session cookie `Secure` |
@@ -63,7 +63,7 @@ See [STYLE_GUIDE.md](STYLE_GUIDE.md). Enforced by `npm run lint` (ESLint flat co
 
 ```bash
 npm test             # all tests
-npm run coverage     # with the 60 % line-coverage gate used by CI
+npm run coverage     # all server code (src/, excluding the browser files in src/public), 60 % gate used by CI
 ```
 
 - `test/unit`: pure domain logic (deadline, state machine, strategies, forecast model, adapters).
@@ -86,7 +86,7 @@ npm run coverage     # with the 60 % line-coverage gate used by CI
 
 ## Deployment
 
-Any host that runs Node.js 22+ with a persistent disk works (a small VM, Render, Railway, Fly.io):
+Any host that runs Node.js 22.14+ with a persistent disk works (a small VM, Render, Railway, Fly.io):
 
 ```bash
 NODE_ENV=production FOODGO_DEMO_MODE=false PORT=8080 FOODGO_DB=/var/lib/foodgo/foodgo.db npm start

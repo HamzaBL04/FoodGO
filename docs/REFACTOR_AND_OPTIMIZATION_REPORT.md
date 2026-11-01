@@ -49,6 +49,8 @@ npm run benchmark         # API latency p50 / p95 / p99 on a large dataset      
 | Branch coverage | 93.81 % | 93.85 % |
 | Function coverage | 95.76 % | 95.91 % |
 
+Coverage scope: these figures were measured with c8's default scope (files loaded by the tests). After an independent review the coverage script now uses `--all` over `src/` (excluding the browser files in `src/public`), which also counts `server.js` and `seed.js`; on that stricter scope coverage is **97.3 %** (119 tests, after adding unit tests for the components).
+
 No behaviour changed: the 105 existing tests passed unchanged after every refactoring step, and a new test checks the batched views equal the per-order views field by field.
 
 ### Performance (milliseconds, lower is better)
@@ -61,10 +63,7 @@ No behaviour changed: the 105 existing tests passed unchanged after every refact
 | GET delivery assignments | 5.48 | 5.43 | 7.59 | 8.90 | ≈ same (within noise) |
 | POST submit order (transaction T1) | 1.56 | 1.63 | 1.94 | 2.12 | ≈ same (within noise) |
 
-| Memory | Before | After |
-|---|---:|---:|
-| Heap used after the run | 38.9 MB | **30.8 MB** |
-| Resident set size | 169.8 MB | 176.3 MB (indexes are held in memory) |
+Memory was also recorded (heap 38.9 → 30.8 MB, RSS 169.8 → 176.3 MB) but an independent rerun gave 42.8 MB heap and 165.8 MB RSS, so the memory difference is within run-to-run noise and we make no claim about it.
 
 All endpoints now meet the specification's proposed target (NFR-01: p95 < 500 ms, order submission < 2 s) with a wide margin. The biggest win is where the specification says load concentrates: the restaurant's view during the lunch peak.
 

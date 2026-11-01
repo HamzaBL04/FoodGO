@@ -81,7 +81,7 @@ test('PAY-002: provider unavailable', async () => {
   assert.equal(res.body.error.code, 'PAY-002');
 });
 
-test('BR-01 / FR-13: orders after the deadline are refused with ORDER-001', async () => {
+test('BR-01 / FR-12 / FR-13: orders before the deadline are accepted, after it refused with ORDER-001', async () => {
   const { app, seed, clock } = createTestApp(); // 08:00, Campus Bites closes 10:30
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.nour.phone);
   const body = { restaurantId: seed.campus.restaurantId, items: items(seed, 'campus'), paymentMethod: 'CASH_ON_DELIVERY' };

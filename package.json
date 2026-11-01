@@ -1,19 +1,19 @@
 {
   "name": "foodgo",
   "version": "0.1.0",
-  "description": "FoodGO — pre-order food delivery platform: customers pre-order in the morning, restaurants prepare and deliver with their own staff at lunch.",
+  "description": "FoodGO \u2014 pre-order food delivery platform: customers pre-order in the morning, restaurants prepare and deliver with their own staff at lunch.",
   "main": "src/server.js",
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.14"
   },
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node src/db/seed.js",
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
-    "coverage": "c8 --check-coverage --lines 60 --reporter=text --reporter=lcov --reporter=json-summary node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "coverage": "c8 --all --include \"src/**/*.js\" --exclude \"src/public/**\" --check-coverage --lines 60 --reporter=text --reporter=lcov --reporter=json-summary node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "lint": "eslint .",
     "traceability": "node scripts/traceability.js",
     "metrics": "node scripts/metrics.js",
