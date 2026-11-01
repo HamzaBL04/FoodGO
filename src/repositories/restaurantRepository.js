@@ -8,8 +8,8 @@ function createRestaurantRepository(db) {
     all: db.prepare('SELECT * FROM restaurant ORDER BY name'),
     byId: db.prepare('SELECT * FROM restaurant WHERE restaurant_id = ?'),
     insert: db.prepare(`INSERT INTO restaurant (restaurant_id, name, status, ordering_deadline, access_rules,
-        cash_on_delivery_enabled, e_payment_enabled, address)
-      VALUES (@restaurantId, @name, 'ACTIVE', @orderingDeadline, @accessRules, @cashOnDeliveryEnabled, @ePaymentEnabled, @address)`),
+        cash_on_delivery_enabled, e_payment_enabled, address, service_zone)
+      VALUES (@restaurantId, @name, 'ACTIVE', @orderingDeadline, @accessRules, @cashOnDeliveryEnabled, @ePaymentEnabled, @address, @serviceZone)`),
     updateSettings: db.prepare(`UPDATE restaurant SET ordering_deadline = @orderingDeadline,
         cash_on_delivery_enabled = @cashOnDeliveryEnabled, e_payment_enabled = @ePaymentEnabled
       WHERE restaurant_id = @restaurantId`),
@@ -35,7 +35,7 @@ function createRestaurantRepository(db) {
       requireScope(restaurantId);
       return mapRow(st.byId.get(restaurantId));
     },
-    insert: (r) => st.insert.run({ accessRules: 'ORGANIZATION_MEMBERS_ONLY', address: null, ...r }),
+    insert: (r) => st.insert.run({ accessRules: 'ORGANIZATION_MEMBERS_ONLY', address: null, serviceZone: null, ...r }),
     updateSettings: (s) => {
       requireScope(s.restaurantId);
       return st.updateSettings.run(s);

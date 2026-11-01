@@ -8,10 +8,11 @@ function createCustomerRepository(db) {
     orgList: db.prepare('SELECT * FROM organization ORDER BY name'),
     orgById: db.prepare('SELECT * FROM organization WHERE organization_id = ?'),
     orgByName: db.prepare('SELECT * FROM organization WHERE lower(name) = lower(?)'),
-    insertOrg: db.prepare(`INSERT INTO organization (organization_id, name, type, status)
-      VALUES (@organizationId, @name, @type, 'ACTIVE')`),
+    insertOrg: db.prepare(`INSERT INTO organization (organization_id, name, type, status, service_zone)
+      VALUES (@organizationId, @name, @type, 'ACTIVE', @serviceZone)`),
     customerByPhone: db.prepare('SELECT * FROM customer WHERE phone_number = ?'),
-    customerById: db.prepare(`SELECT c.*, o.name AS organization_name, o.type AS organization_type
+    customerById: db.prepare(`SELECT c.*, o.name AS organization_name, o.type AS organization_type,
+        o.service_zone AS organization_zone
       FROM customer c JOIN organization o ON o.organization_id = c.organization_id WHERE c.customer_id = ?`),
     insertCustomer: db.prepare(`INSERT INTO customer (customer_id, full_name, phone_number, organization_id, status, created_at)
       VALUES (@customerId, @fullName, @phoneNumber, @organizationId, 'ACTIVE', @createdAt)`),
@@ -25,13 +26,13 @@ function createCustomerRepository(db) {
     activeMembershipsForCustomer: db.prepare(`SELECT rc.restaurant_id FROM restaurant_customer rc
       WHERE rc.customer_id = ? AND rc.status = 'ACTIVE' AND rc.eligible = 1`),
     listMembers: db.prepare(`SELECT c.customer_id, c.full_name, c.phone_number, o.name AS organization_name,
-        rc.eligible, rc.status, rc.registered_at
+        o.service_zone AS organization_zone, rc.eligible, rc.status, rc.registered_at
       FROM restaurant_customer rc
       JOIN customer c ON c.customer_id = rc.customer_id
       JOIN organization o ON o.organization_id = c.organization_id
       WHERE rc.restaurant_id = ? ORDER BY rc.registered_at DESC`),
     memberDetail: db.prepare(`SELECT c.customer_id, c.full_name, c.phone_number, o.organization_id, o.name AS organization_name,
-        o.type AS organization_type, rc.eligible, rc.status, rc.registered_at, rc.credential_ref
+        o.type AS organization_type, o.service_zone AS organization_zone, rc.eligible, rc.status, rc.registered_at, rc.credential_ref
       FROM restaurant_customer rc
       JOIN customer c ON c.customer_id = rc.customer_id
       JOIN organization o ON o.organization_id = c.organization_id
@@ -42,7 +43,7 @@ function createCustomerRepository(db) {
     listOrganizations: () => mapRows(st.orgList.all()),
     findOrganization: (id) => mapRow(st.orgById.get(id)),
     findOrganizationByName: (name) => mapRow(st.orgByName.get(name)),
-    insertOrganization: (org) => st.insertOrg.run(org),
+    insertOrganization: (org) => st.insertOrg.run({ serviceZone: null, ...org }),
 
     findCustomerByPhone: (phone) => mapRow(st.customerByPhone.get(phone)),
     findCustomer: (customerId) => mapRow(st.customerById.get(customerId)),

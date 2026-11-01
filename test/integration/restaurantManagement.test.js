@@ -12,7 +12,7 @@ async function staffOf(app) {
 test('BR-09: staff cannot reach another restaurant through the URL', async () => {
   const { app, seed } = createTestApp();
   const auth = await staffOf(app);
-  const res = await request(app).get(`/api/v1/restaurants/${seed.campus.restaurantId}/menu`).set('Authorization', auth);
+  const res = await request(app).get(`/api/v1/restaurants/${seed.kramSnack.restaurantId}/menu`).set('Authorization', auth);
   assert.equal(res.status, 403);
   assert.equal(res.body.error.code, 'AUTH-002');
 });
@@ -87,7 +87,7 @@ test('UC-04 / FR-01–FR-04: in-person registration creates a person and a membe
   const auth = await staffOf(app);
   const url = `/api/v1/restaurants/${seed.darLella.restaurantId}/customers`;
   const res = await request(app).post(url).set('Authorization', auth).send({
-    fullName: 'Lina Ghannouchi', phoneNumber: '+21627000111', organizationId: seed.orgs.lac2.organizationId, identityVerified: true,
+    fullName: 'Lina Ghannouchi', phoneNumber: '+21627000111', organizationId: seed.orgs.lac3TechHub.organizationId, identityVerified: true,
   });
   assert.equal(res.status, 201);
   assert.equal(res.body.customer.existingPerson, false);
@@ -99,7 +99,7 @@ test('UC-04 / FR-01–FR-04: in-person registration creates a person and a membe
   assert.deepEqual(list.body.restaurants.map((r) => r.name), ['Dar Lella']);
 
   const dup = await request(app).post(url).set('Authorization', auth).send({
-    fullName: 'Lina Ghannouchi', phoneNumber: '+21627000111', organizationId: seed.orgs.lac2.organizationId, identityVerified: true,
+    fullName: 'Lina Ghannouchi', phoneNumber: '+21627000111', organizationId: seed.orgs.lac3TechHub.organizationId, identityVerified: true,
   });
   assert.equal(dup.status, 400);
 });
@@ -108,7 +108,7 @@ test('BR-05: registration requires in-person identity verification', async () =>
   const { app, seed } = createTestApp();
   const auth = await staffOf(app);
   const res = await request(app).post(`/api/v1/restaurants/${seed.darLella.restaurantId}/customers`).set('Authorization', auth).send({
-    fullName: 'No Check', phoneNumber: '+21627000999', organizationId: seed.orgs.lac2.organizationId,
+    fullName: 'No Check', phoneNumber: '+21627000999', organizationId: seed.orgs.lac3TechHub.organizationId,
   });
   assert.equal(res.status, 400);
   assert.match(res.body.error.message, /BR-05/);
@@ -116,9 +116,9 @@ test('BR-05: registration requires in-person identity verification', async () =>
 
 test('D-01: a person registered at two restaurants is stored once, with two memberships', async () => {
   const { app, seed, ctx } = createTestApp();
-  const campus = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.campusStaff);
-  const res = await request(app).post(`/api/v1/restaurants/${seed.campus.restaurantId}/customers`).set('Authorization', campus).send({
-    fullName: 'Omar Trabelsi', phoneNumber: DEMO_ACCOUNTS.omar.phone, organizationId: seed.orgs.lac2.organizationId, identityVerified: true,
+  const kramSnack = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.kramSnackStaff);
+  const res = await request(app).post(`/api/v1/restaurants/${seed.kramSnack.restaurantId}/customers`).set('Authorization', kramSnack).send({
+    fullName: 'Omar Trabelsi', phoneNumber: DEMO_ACCOUNTS.omar.phone, organizationId: seed.orgs.lac3TechHub.organizationId, identityVerified: true,
   });
   assert.equal(res.status, 201);
   assert.equal(res.body.customer.existingPerson, true);
@@ -132,8 +132,8 @@ test('BR-15 / FR-16: staff see verification info only for their own customers', 
   const base = `/api/v1/restaurants/${seed.darLella.restaurantId}/customers`;
   const own = await request(app).get(`${base}/${seed.customers.omar.customerId}`).set('Authorization', auth);
   assert.equal(own.status, 200);
-  assert.equal(own.body.customer.organizationName, 'Lac 2 Tech Park');
-  // Nour is registered only at Campus Bites
+  assert.equal(own.body.customer.organizationName, 'Lac 3 Tech Hub');
+  // Nour is registered only at Kram Snack
   const other = await request(app).get(`${base}/${seed.customers.nour.customerId}`).set('Authorization', auth);
   assert.equal(other.status, 404);
   const list = await request(app).get(base).set('Authorization', auth);
@@ -148,7 +148,7 @@ test('FR-17: making a customer ineligible removes the restaurant from their list
   assert.equal(res.body.customer.eligible, false);
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.yasmine.phone);
   assert.equal((await request(app).get('/api/v1/customer/restaurants').set('Authorization', customer)).body.restaurants.length, 2);
-  const menu = await request(app).get(`/api/v1/customer/restaurants/${seed.campus.restaurantId}/menu`).set('Authorization', customer);
+  const menu = await request(app).get(`/api/v1/customer/restaurants/${seed.kramSnack.restaurantId}/menu`).set('Authorization', customer);
   assert.equal(menu.status, 200);
   // Omar can no longer sign in: he has no eligible membership left
   const otp = await request(app).post('/api/v1/auth/otp/request').send({ phoneNumber: DEMO_ACCOUNTS.omar.phone });
@@ -158,7 +158,7 @@ test('FR-17: making a customer ineligible removes the restaurant from their list
 test('BR-04 / FR-06: a customer cannot read the menu of a restaurant that did not register them', async () => {
   const { app, seed } = createTestApp();
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
-  const res = await request(app).get(`/api/v1/customer/restaurants/${seed.campus.restaurantId}/menu`).set('Authorization', customer);
+  const res = await request(app).get(`/api/v1/customer/restaurants/${seed.kramSnack.restaurantId}/menu`).set('Authorization', customer);
   assert.equal(res.status, 403);
 });
 
@@ -181,9 +181,9 @@ test('organizations: list and create, duplicates refused', async () => {
   const auth = await staffOf(app);
   const list = await request(app).get('/api/v1/organizations').set('Authorization', auth);
   assert.equal(list.body.organizations.length, 3);
-  const created = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'ESPRIT Ghazela', type: 'CAMPUS' });
+  const created = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'Kram Port Logistics', type: 'WORKPLACE', serviceZone: 'ZI_KRAM' });
   assert.equal(created.status, 201);
-  const dup = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'esprit ghazela', type: 'CAMPUS' });
+  const dup = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'kram port logistics', type: 'WORKPLACE', serviceZone: 'ZI_KRAM' });
   assert.equal(dup.status, 400);
 });
 
@@ -191,9 +191,9 @@ test('FR-05: customer profile and restaurant list carry deadline information', a
   const { app } = createTestApp();
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.yasmine.phone);
   const me = await request(app).get('/api/v1/customer/me').set('Authorization', customer);
-  assert.equal(me.body.profile.organization.name, 'MUST University');
+  assert.equal(me.body.profile.organization.name, 'Lac 3 Business Tower');
   const list = await request(app).get('/api/v1/customer/restaurants').set('Authorization', customer);
-  const campus = list.body.restaurants.find((r) => r.name === 'Campus Bites');
-  assert.equal(campus.orderingOpen, true); // 08:00 < 10:30
-  assert.equal(campus.minutesLeft, 150);
+  const kramSnack = list.body.restaurants.find((r) => r.name === 'Kram Snack');
+  assert.equal(kramSnack.orderingOpen, true); // 08:00 < 10:30
+  assert.equal(kramSnack.minutesLeft, 150);
 });

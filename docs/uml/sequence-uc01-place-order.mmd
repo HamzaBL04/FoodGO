@@ -22,6 +22,7 @@ sequenceDiagram
     note over OM,DB: T1 — one SQLite transaction, all or nothing
     OM->>CC: assertMembership (BR-04, BR-16)
     OM->>DB: read restaurant + deadline
+    OM->>OM: assertInServiceArea (FR-32, BR-17) — ORDER-003
     OM->>OM: evaluateDeadline (BR-01) — ORDER-001
     OM->>PAY: assertMethodAvailable (FR-25/26)
     OM->>DB: read item availability (BR-02) — ORDER-002, same restaurant (I-5)

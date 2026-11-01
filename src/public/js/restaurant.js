@@ -48,7 +48,7 @@ function ticket(o, flashId) {
   }
   return `<article class="ticket ${o.orderId === flashId ? 'flash' : ''}">
     <div class="order-id">${esc(o.orderId)}</div>
-    <div><strong>${esc(o.customer.fullName)}</strong>, ${esc(o.customer.organizationName)}</div>
+    <div><strong>${esc(o.customer.fullName)}</strong>, ${esc(o.customer.organizationName)}${o.customer.organizationZone ? ` · ${esc(o.customer.organizationZone)}` : ''}</div>
     <div class="muted">${esc(o.customer.phoneNumber)}, ordered ${time(o.createdAt)}</div>
     <ul>${o.items.map((i) => `<li>${i.quantity} × ${esc(i.name)}</li>`).join('')}</ul>
     <div><strong>${tnd(o.total)}</strong> ${paymentChip(o.paymentMethod, o.paymentStatus)}</div>
@@ -135,11 +135,11 @@ $('#add-item').addEventListener('submit', async (e) => {
 async function loadCustomers() {
   try {
     const [{ customers }, { organizations }] = await Promise.all([api(`${R}/customers`), api('/organizations')]);
-    $('#org-select').innerHTML = organizations.map((o) => `<option value="${esc(o.organizationId)}">${esc(o.name)}</option>`).join('');
+    $('#org-select').innerHTML = organizations.map((o) => `<option value="${esc(o.organizationId)}">${esc(o.name)}${o.zone ? ` (${esc(o.zone)})` : ''}</option>`).join('');
     $('#customer-table').innerHTML = `<tr><th>Customer</th><th>Organization</th><th>Eligible</th></tr>` + customers.map((c) => `
       <tr>
         <td><strong>${esc(c.fullName)}</strong><br><span class="muted">${esc(c.phoneNumber)}</span></td>
-        <td>${esc(c.organizationName)}</td>
+        <td>${esc(c.organizationName)}${c.organizationZone ? `<br><span class="muted">${esc(c.organizationZone)}</span>` : ''}</td>
         <td><label class="switch"><input type="checkbox" data-eligible="${esc(c.customerId)}" ${c.eligible ? 'checked' : ''} aria-label="${esc(c.fullName)} eligible"><span></span></label></td>
       </tr>`).join('');
     for (const el of document.querySelectorAll('[data-eligible]')) {

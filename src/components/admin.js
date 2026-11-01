@@ -3,6 +3,7 @@
 const { AppError } = require('../domain/errors');
 const { newId } = require('../domain/ids');
 const { isValidDeadline, localDateString } = require('../domain/deadline');
+const { zoneLabel } = require('../domain/serviceArea');
 
 /**
  * Platform administration (UN-24, FR-29, SDD §5.1.5). Platform scope, not
@@ -11,10 +12,11 @@ const { isValidDeadline, localDateString } = require('../domain/deadline');
  */
 function createAdminComponent({ repos, clock, auth }) {
   function listRestaurants() {
-    return repos.restaurants.listAll();
+    return repos.restaurants.listAll().map((r) => ({ ...r, zone: zoneLabel(r.serviceZone) }));
   }
 
-  function createRestaurant(admin, { name, orderingDeadline, address }) {
+  /** FR-32 / BR-17: every restaurant is located in a service zone (the schema validates the list). */
+  function createRestaurant(admin, { name, orderingDeadline, address, serviceZone }) {
     if (!isValidDeadline(orderingDeadline)) throw new AppError('VAL-001', 'orderingDeadline must be HH:MM');
     const restaurantId = newId('rst');
     repos.unitOfWork(() => {
@@ -25,6 +27,7 @@ function createAdminComponent({ repos, clock, auth }) {
         cashOnDeliveryEnabled: 1,
         ePaymentEnabled: 1,
         address: address || null,
+        serviceZone,
       });
       // SDD §3.3: an operating restaurant has at least one menu.
       repos.restaurants.insertMenu(newId('menu'), restaurantId);

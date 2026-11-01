@@ -27,6 +27,7 @@ function restaurantSettingsView(r) {
     restaurantId: r.restaurantId,
     name: r.name,
     address: r.address,
+    serviceZone: r.serviceZone,
     orderingDeadline: r.orderingDeadline,
     cashOnDeliveryEnabled: r.cashOnDeliveryEnabled === 1,
     ePaymentEnabled: r.ePaymentEnabled === 1,

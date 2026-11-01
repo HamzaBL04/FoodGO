@@ -110,7 +110,7 @@ test('FR-29: admin creates a restaurant and provisions its staff, who can then s
   const { app } = createTestApp();
   const admin = await signIn(request, app, 'ADMIN', DEMO_ACCOUNTS.admin);
   const r = await request(app).post('/api/v1/admin/restaurants').set('Authorization', admin)
-    .send({ name: 'Sfax Grill', orderingDeadline: '10:00' });
+    .send({ name: 'Sfax Grill', orderingDeadline: '10:00', serviceZone: 'ZI_KRAM' });
   assert.equal(r.status, 201);
   const restaurantId = r.body.restaurant.restaurantId;
 

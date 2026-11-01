@@ -19,7 +19,7 @@ function groupBy(rows, key) {
 // The restaurant queue row: order + the customer information staff need to
 // verify it (FR-16). Shared by the list and the single-order lookup.
 const QUEUE_SELECT = `SELECT o.*, c.full_name AS customer_name, c.phone_number AS customer_phone,
-    org.name AS organization_name, rc.eligible AS customer_eligible
+    org.name AS organization_name, org.service_zone AS organization_zone, rc.eligible AS customer_eligible
   FROM orders o
   JOIN customer c ON c.customer_id = o.customer_id
   JOIN organization org ON org.organization_id = c.organization_id
@@ -64,7 +64,7 @@ function createOrderRepository(db) {
     assignmentForPerson: db.prepare(`SELECT * FROM delivery_assignment
       WHERE assignment_id = ? AND delivery_person_id = ? AND restaurant_id = ?`),
     assignmentsForPerson: db.prepare(`SELECT a.*, o.status AS order_status, o.total_millimes, o.payment_method, o.payment_status,
-        c.full_name AS customer_name, org.name AS organization_name
+        c.full_name AS customer_name, org.name AS organization_name, org.service_zone AS organization_zone
       FROM delivery_assignment a
       JOIN orders o ON o.order_id = a.order_id
       JOIN customer c ON c.customer_id = o.customer_id

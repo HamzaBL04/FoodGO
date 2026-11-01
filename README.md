@@ -1,6 +1,6 @@
 # FoodGO
 
-**Order lunch in the morning, eat on time.** FoodGO is a pre-order food delivery platform for Tunisian offices and campuses. Customers pre-order before a deadline set by the restaurant; at the deadline the kitchen knows exactly what to cook, and the restaurant's own delivery staff bring lunch at noon. The platform coordinates, the restaurant delivers.
+**Order lunch in the morning, stay off the lunchtime roads.** FoodGO is a pre-order food delivery platform **only for Lac 3 and Zone Industrielle Le Kram** in Tunis. Traffic in these two zones gets heavy at lunchtime because employees leave work at the same time to get food. With FoodGO they pre-order before a deadline set by the restaurant and stay at their desks. At the deadline the kitchen knows exactly what to cook, and the restaurant's own delivery staff bring lunch at noon. The platform coordinates, the restaurant delivers. ([Why only these two zones](docs/decisions/0007-service-area-lac3-zi-kram.md))
 
 **Team:** Hamza Ben Labiedh, Ali Chamakh, Mohamed Krid
 **Course:** CS 488 — AI-First Software Engineering, MUST University, Fall 2026
@@ -58,11 +58,11 @@ API documentation: **http://localhost:3000/api/docs** (Swagger UI, from [`docs/a
 | Customer, 2 restaurants | `+21620111222` (Yasmine) | SMS code is shown on screen in demo mode |
 | Customer | `+21698333444` (Omar) | SMS code is shown on screen |
 | Restaurant staff, Dar Lella | `staff@darlella.tn` | `Staff#2026` |
-| Restaurant staff, Campus Bites | `staff@campusbites.tn` | `Staff#2026` |
+| Restaurant staff, Kram Snack (Zone Industrielle Le Kram) | `staff@kramsnack.tn` | `Staff#2026` |
 | Delivery person, Dar Lella | `karim.d` | `Delivery#2026` |
 | Administrator | `admin@foodgo.tn` | `Admin#2026` |
 
-Dar Lella's demo deadline is 23:30 so ordering works at almost any hour. Campus Bites closes at 10:30, which shows a late order being refused.
+Dar Lella's demo deadline is 23:30 so ordering works at almost any hour. Kram Snack closes at 10:30, which shows a late order being refused.
 
 ## System diagram
 
@@ -131,11 +131,13 @@ Node.js 22.14+ · Express 5 · SQLite (better-sqlite3) · zod · helmet · plain
 │   ├── api/
 │   ├── architecture.md
 │   ├── decisions/
+│   ├── images/
 │   ├── lab3-specification/
 │   ├── lab4-sdd/
 │   ├── metrics/
 │   ├── proposal/
 │   ├── requirements/
+│   ├── setup-report.md
 │   ├── setup.md
 │   ├── uml/
 ├── scripts/

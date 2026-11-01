@@ -9,6 +9,7 @@ Requirements artifact for the CS 488 midterm. Source of truth: the Lab 3 specifi
 
 | Epic | Stories | FRs |
 |---|---|---|
+| E0 Service area | US-32 | FR-32, BR-17 (team decision, ADR-0007) |
 | E1 Accounts & access | US-01 – US-05 | FR-01–FR-04, FR-29, FR-30, BR-05, BR-16 |
 | E2 Restaurant & menu | US-06 – US-09 | FR-05–FR-08, FR-12–FR-13 settings, BR-03 |
 | E3 Ordering | US-10 – US-13 | FR-09–FR-15, BR-01, BR-02, BR-12 |
@@ -46,17 +47,18 @@ Sorted by priority: Must first, then Should, then Could; within a priority, by d
 | 20 | US-26 | As a **developer** I want CI to lint and test every pull request. | GitHub Actions on Node 22 and 24; coverage ≥ 60 %. | Course rubric | Must | 2 | ✅ |
 | 21 | US-27 | As a **developer** I want API documentation. | OpenAPI 3 file + Swagger UI at `/api/docs`. | Course rubric | Must | 3 | ✅ |
 | 22 | US-28 | As the **team** we want before/after metrics for refactoring and performance. | Report with complexity, lint, coverage, latency. | Course rubric | Must | 5 | ✅ |
-| 23 | US-13 | As **restaurant staff** I want to move an order into preparation. | Only legal transitions (State pattern). | BR-14 | Should | 1 | ✅ |
-| 24 | US-19 | As a **customer** I want to follow my order's progress live. | Status updates without refreshing; I never see other people's orders. | FR-24, BR-14, BR-15 | Should | 3 | ✅ |
-| 25 | US-22 | As a **customer** I want to pay electronically through a supported Tunisian provider. | Sandbox adapter now; declined payment rolls back the order (PAY-001); provider down → PAY-002. Real provider blocked on Q-22. | FR-27, BR-13 | Should | 5 | ✅ sandbox / ⛔ real provider |
-| 26 | US-24 | As **restaurant staff** I want a forecast of tomorrow's dishes so that I prepare the right quantities. | Per-dish expected quantity, range, confidence; accuracy shown; advice only, never changes orders; optional Claude summary. | FR-31 (PROPOSED), BG-03, BG-04 | Should | 8 | ✅ |
-| 27 | US-25 | As the **administrator** I want to monitor today's orders and security events. | Read-only monitor with audit trail. | BG-09, §15 | Should | 3 | ✅ |
-| 28 | US-31 | As the **team** we want the app deployed on a public host. | HTTPS, persistent volume for SQLite. | §7 availability | Should | 3 | 🔜 |
-| 29 | US-20 | As a **delivery person** I want to record failed deliveries. | — | Q-07, Q-20 | Could | 3 | ⛔ |
-| 30 | US-29 | As a **customer** I want to cancel an order before preparation. | — | Q-04–Q-06 | Could | 5 | ⛔ |
-| 31 | US-30 | As the **platform** we want real SMS and e-mail notifications. | Adapter swap only. | §5.2.2, Q-22 | Could | 5 | 🔜 |
+| 23 | US-32 | As **FoodGO** we want to serve only Lac 3 and Zone Industrielle Le Kram so that employees there stop driving out at lunchtime. | Admin must give every restaurant a zone and staff every workplace a zone, LAC_3 or ZI_KRAM; any other value refused (VAL-001, DB CHECK); an order is refused unless restaurant and workplace are both in the area (ORDER-003); zone shown to customers, staff and couriers. | FR-32, BR-17 | Must | 3 | ✅ |
+| 24 | US-13 | As **restaurant staff** I want to move an order into preparation. | Only legal transitions (State pattern). | BR-14 | Should | 1 | ✅ |
+| 25 | US-19 | As a **customer** I want to follow my order's progress live. | Status updates without refreshing; I never see other people's orders. | FR-24, BR-14, BR-15 | Should | 3 | ✅ |
+| 26 | US-22 | As a **customer** I want to pay electronically through a supported Tunisian provider. | Sandbox adapter now; declined payment rolls back the order (PAY-001); provider down → PAY-002. Real provider blocked on Q-22. | FR-27, BR-13 | Should | 5 | ✅ sandbox / ⛔ real provider |
+| 27 | US-24 | As **restaurant staff** I want a forecast of tomorrow's dishes so that I prepare the right quantities. | Per-dish expected quantity, range, confidence; accuracy shown; advice only, never changes orders; optional Claude summary. | FR-31 (PROPOSED), BG-03, BG-04 | Should | 8 | ✅ |
+| 28 | US-25 | As the **administrator** I want to monitor today's orders and security events. | Read-only monitor with audit trail. | BG-09, §15 | Should | 3 | ✅ |
+| 29 | US-31 | As the **team** we want the app deployed on a public host. | HTTPS, persistent volume for SQLite. | §7 availability | Should | 3 | 🔜 |
+| 30 | US-20 | As a **delivery person** I want to record failed deliveries. | — | Q-07, Q-20 | Could | 3 | ⛔ |
+| 31 | US-29 | As a **customer** I want to cancel an order before preparation. | — | Q-04–Q-06 | Could | 5 | ⛔ |
+| 32 | US-30 | As the **platform** we want real SMS and e-mail notifications. | Adapter swap only. | §5.2.2, Q-22 | Could | 5 | 🔜 |
 
-**Sprint 1 velocity (midterm MVP):** 86 story points done out of 102 in the backlog.
+**Sprint 1 velocity (midterm MVP):** 89 story points done out of 105 in the backlog (including US-32, added on 1 Nov 2026 when the team narrowed the service area, ADR-0007).
 
 ## Non-functional requirements
 

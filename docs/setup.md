@@ -63,7 +63,7 @@ Demo accounts are listed in the [README](../README.md#demo-credentials). API doc
   **Fix:** another app uses the port. Set `PORT=3001` in `.env`, or `PORT=3001 npm start` (PowerShell: `$env:PORT=3001; npm start`).
 - **Problem:** `./scripts/setup.sh: Permission denied`.
   **Fix:** `chmod +x scripts/*.sh` or run `bash scripts/setup.sh`.
-- **Problem:** Ordering at Campus Bites says "closed for today".
+- **Problem:** Ordering at Kram Snack says "closed for today".
   **Fix:** expected after 10:30 — that is the deadline rule (BR-01). Use Dar Lella (deadline 23:30 in the demo data) or change the deadline in the restaurant's Settings.
 - **Problem:** The customer sign-in code never arrives by SMS.
   **Fix:** expected — no SMS provider is integrated. In demo mode the code is shown on screen. In production mode (`NODE_ENV=production`) customers cannot sign in until a real SMS adapter is added.

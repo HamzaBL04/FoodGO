@@ -79,7 +79,8 @@ async function main() {
   const contexts = [];
 
   contexts.push(await card(browser, 'Midterm MVP demo — CS 488 AI-First Software Engineering', [
-    'Pre-order lunch in the morning, delivered by the restaurant at noon',
+    'Pre-order lunch in Lac 3 and Zone Industrielle Le Kram, and stay off the lunchtime roads',
+    'Order in the morning · the restaurant delivers at noon · only these two zones are served',
     'Hamza Ben Labiedh · Ali Chamakh · Mohamed Krid',
   ]));
 
@@ -98,12 +99,14 @@ async function main() {
     await c.click('#otp-verify button[type=submit]');
     await c.waitForSelector('.restaurant-card');
   });
-  await scene(c, 'Only restaurants that registered her are listed (BR-04, BR-16). The bar shows time left before each deadline', async () => {
+  await scene(c, 'Only restaurants that registered her are listed, each with its zone: Lac 3 or ZI Le Kram (BR-04, FR-32)', async () => {
+    await pause(1800);
+    await caption(c, 'The bar under each restaurant shows the time left before its ordering deadline (BR-01)');
     await pause(2600);
-    await c.click('.restaurant-card >> text=Campus Bites');
+    await c.click('.restaurant-card >> text=Kram Snack');
     await c.waitForSelector('.menu-item');
     await pause(1200);
-    await caption(c, 'Campus Bites closed at 10:30: ordering is refused after the deadline (BR-01)');
+    await caption(c, 'Kram Snack closed at 10:30: ordering is refused after the deadline (BR-01)');
     await pause(3000);
     await c.click('#back');
     await c.waitForSelector('.restaurant-card');
@@ -172,11 +175,13 @@ async function main() {
     await s.click('.switch >> nth=5');
     await pause(1000);
   });
-  await scene(s, 'Customers are registered in person only, after an identity check (FR-01–FR-04, BR-05)', async () => {
+  await scene(s, 'Customers are registered in person, with a workplace in Lac 3 or Zone Industrielle Le Kram (FR-01–FR-04, BR-05, FR-32)', async () => {
     await s.click('[data-tab=customers]');
     await s.waitForSelector('#register');
     await slowType(s, '#register input[name=fullName]', 'Lina Ghannouchi');
     await slowType(s, '#register input[name=phoneNumber]', '+21627000111');
+    await s.selectOption('#org-select', { label: 'Kram Textile Works (Zone Industrielle Le Kram)' });
+    await pause(900);
     await s.check('#register input[name=identityVerified]');
     await pause(700);
     await s.click('#register button[type=submit]');
@@ -197,7 +202,7 @@ async function main() {
     await pause(1500);
     await d.click('.job');
     await d.waitForSelector('#start');
-    await caption(d, 'Pickup, destination, phone, items and the cash to collect: only what the delivery needs (FR-21, BR-15)');
+    await caption(d, 'Pickup, destination and its zone, phone, items and the cash to collect: only what the delivery needs (FR-21, BR-15)');
     await pause(3200);
   });
   await scene(d, 'Start the delivery, then confirm it. Only the assigned person can confirm (FR-22, FR-23, BR-11)', async () => {
@@ -227,6 +232,15 @@ async function main() {
     await a.waitForSelector('#audit tr:nth-child(2)');
     await pause(3500);
   });
+  await scene(a, 'Every restaurant is placed in one of the two zones FoodGO serves; any other area is refused (FR-32, BR-17)', async () => {
+    await a.click('[data-tab=restaurants]');
+    await a.waitForSelector('#restaurants tr');
+    await pause(1500);
+    await a.click('#add-restaurant select[name=serviceZone]');
+    await pause(1800);
+    await a.keyboard.press('Escape');
+    await pause(1200);
+  });
   await scene(a, 'The REST API is documented with OpenAPI and served at /api/docs', async () => {
     await a.goto(`${BASE}/api/docs`);
     await a.waitForSelector('.swagger-ui .opblock', { timeout: 15000 });
@@ -239,8 +253,8 @@ async function main() {
 
   contexts.push(await card(browser, 'Built and tested', [
     'Layered architecture from our SDD · State, Strategy, Adapter, Observer patterns',
-    '100+ automated tests, CI on every pull request, ~99 % line coverage',
-    '31/31 functional requirements and 16/16 business rules traced to code and tests',
+    '128 automated tests, CI on every pull request, ~97 % line coverage',
+    '32/32 functional requirements and 17/17 business rules traced to code and tests',
     'github.com/HamzaBL04/foodGO',
   ]));
 

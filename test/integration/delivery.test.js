@@ -47,7 +47,7 @@ test('System scenario (spec §16.3, FR-19–FR-24): order -> prepare -> assign -
   const mine = list.body.assignments.find((a) => a.orderId === order.orderId);
   assert.ok(mine);
   const detail = await request(app).get(`/api/v1/delivery/assignments/${mine.assignmentId}`).set('Authorization', karim);
-  assert.equal(detail.body.assignment.customer.destination, 'Lac 2 Tech Park'); // FR-21
+  assert.equal(detail.body.assignment.customer.destination, 'Lac 3 Tech Hub'); // FR-21
   assert.equal(detail.body.assignment.payment.amountToCollect, 13);
 
   // 9 delivery occurs and is confirmed by the delivery person (BR-11)
@@ -78,7 +78,7 @@ test('System scenario (spec §16.3, FR-19–FR-24): order -> prepare -> assign -
 test('I-8 / BR-06: an order cannot be assigned to another restaurant\'s delivery person', async () => {
   const { app, seed } = createTestApp();
   const { order } = await placeOrder(app, seed);
-  const { res } = await assign(app, seed, order.orderId, seed.campus.couriers.samiId);
+  const { res } = await assign(app, seed, order.orderId, seed.kramSnack.couriers.samiId);
   assert.equal(res.status, 409);
   assert.equal(res.body.error.code, 'DEL-001');
 });

@@ -3,6 +3,7 @@
 const { AppError } = require('../domain/errors');
 const { evaluateDeadline } = require('../domain/deadline');
 const { menuItemView, paymentMethodsFor } = require('./presenters');
+const { zoneLabel } = require('../domain/serviceArea');
 
 /**
  * Customer Component (SDD §2.3): the customer's own record, the restaurants
@@ -26,6 +27,7 @@ function createCustomerComponent({ repos, clock }) {
       restaurantId: r.restaurantId,
       name: r.name,
       address: r.address,
+      zone: zoneLabel(r.serviceZone),
       paymentMethods: paymentMethodsFor(r),
       ...deadlineInfo(r),
     }));
@@ -45,7 +47,7 @@ function createCustomerComponent({ repos, clock }) {
     assertMembership(customerId, restaurantId);
     const r = repos.restaurants.findById(restaurantId);
     return {
-      restaurant: { restaurantId: r.restaurantId, name: r.name, address: r.address, paymentMethods: paymentMethodsFor(r), ...deadlineInfo(r) },
+      restaurant: { restaurantId: r.restaurantId, name: r.name, address: r.address, zone: zoneLabel(r.serviceZone), paymentMethods: paymentMethodsFor(r), ...deadlineInfo(r) },
       items: repos.restaurants.listItems(restaurantId).map(menuItemView),
     };
   }
@@ -56,7 +58,7 @@ function createCustomerComponent({ repos, clock }) {
       customerId: c.customerId,
       fullName: c.fullName,
       phoneNumber: c.phoneNumber,
-      organization: { organizationId: c.organizationId, name: c.organizationName, type: c.organizationType },
+      organization: { organizationId: c.organizationId, name: c.organizationName, type: c.organizationType, zone: zoneLabel(c.organizationZone) },
     };
   }
 

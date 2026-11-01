@@ -3,18 +3,21 @@
 **Course:** CS 488 AI-First Software Engineering, Fall 2026, MUST University
 **Team:** Hamza Ben Labiedh, Ali Chamakh, Mohamed Krid
 **Repository:** https://github.com/HamzaBL04/foodGO
-**Version:** 1.0, 1 November 2026
+**Version:** 1.1, 1 November 2026 (service area narrowed to Lac 3 and Zone Industrielle Le Kram, ADR-0007)
 
 ## 1. Problem
 
-In Tunisian business districts and campuses, everyone orders lunch in the same 90 minutes. Restaurants are swamped, customers wait, and kitchens cook without knowing how much will be sold. Delivery is improvised by whoever is free.
+**Lac 3** and **Zone Industrielle Le Kram** are office and industrial areas of Tunis where traffic gets heavy at lunchtime. Many employees leave their workplace at the same moment to get food, so the roads jam and restaurants are swamped by everyone arriving at once. Kitchens cook without knowing how much will be sold, and delivery is improvised by whoever is free.
 
-FoodGO moves ordering to the morning. A customer pre-orders before a deadline the restaurant sets. At the deadline the restaurant knows exactly what to cook, and its **own** delivery staff bring lunch to the customer's office or campus at noon. The platform coordinates; the restaurant delivers.
+FoodGO moves ordering to the morning, **and it serves only these two zones**. An employee pre-orders before a deadline the restaurant sets. At the deadline the restaurant knows exactly what to cook, and its **own** delivery staff bring lunch to the employee's workplace at noon. Employees stay at their desks, and many individual lunch trips become a few planned delivery runs. The platform coordinates; the restaurant delivers.
+
+The service area is a team decision, recorded in ADR-0007 (FR-32, BR-17). We have not measured the traffic yet. Confirming the problem with employees in both zones is part of Sprint 2.
 
 ## 2. Objectives (business goals from the specification)
 
 | ID | Goal | How FoodGO meets it |
 |---|---|---|
+| Team goal (ADR-0007) | Cut lunchtime traffic in Lac 3 and Zone Industrielle Le Kram | Employees order in the morning and stay at their desks; the restaurant's delivery runs replace individual trips. FoodGO only serves these two zones (FR-32, BR-17) |
 | BG-01, BG-02 | Reduce lunch-hour waiting, move ordering before lunch | Morning pre-orders with a hard restaurant deadline |
 | BG-03, BG-04 | Help restaurants predict demand and plan preparation | Exact order count at the deadline **plus** an AI-assisted forecast of the next service |
 | BG-05 | Organise delivery | Assignment to the restaurant's own delivery people, tracked to confirmation |
@@ -24,20 +27,23 @@ FoodGO moves ordering to the morning. A customer pre-orders before a deadline th
 
 ## 3. Users
 
-Customers (employees and students), restaurant staff, the restaurant's delivery people, and the platform administrator. External systems: Tunisian e-payment providers, SMS/OTP, notifications, and optionally an LLM.
+Customers (employees of companies in Lac 3 and Zone Industrielle Le Kram), restaurant staff in those two zones, the restaurant's delivery people, and the platform administrator. External systems: Tunisian e-payment providers, SMS/OTP, notifications, and optionally an LLM.
 
 ## 4. Scope
 
+**Service area:** Lac 3 and Zone Industrielle Le Kram only. Every restaurant and every workplace records its zone, and an order is taken only when both are inside the area (FR-32, BR-17).
+
 **In scope for the first release:** in-person customer registration and SMS-code sign-in, menus and availability, morning pre-ordering with deadline, customer verification, delivery assignment and confirmation, cash and e-payment status, live order tracking, administration, and an advisory AI demand forecast.
 
-**Out of scope until stakeholders decide (spec §19.7):** cancellation, refunds, failed-delivery handling, a specific real payment provider, GPS tracking, delivery fees, self-service registration, a platform-owned delivery fleet.
+**Out of scope until stakeholders decide (spec §19.7):** other areas of Tunis, cross-zone delivery rules and staggered delivery windows (ADR-0007), cancellation, refunds, failed-delivery handling, a specific real payment provider, GPS tracking, delivery fees, self-service registration, a platform-owned delivery fleet.
 
 ## 5. Key user stories and acceptance criteria
 
-The full prioritised backlog (31 stories, MoSCoW, story points) is in `docs/requirements/BACKLOG.md`. The core stories:
+The full prioritised backlog (32 stories, MoSCoW, story points) is in `docs/requirements/BACKLOG.md`. The core stories:
 
 | Story | Acceptance criteria |
 |---|---|
+| **US-32** As FoodGO we serve only Lac 3 and Zone Industrielle Le Kram. | Every restaurant and workplace has one of the two zones; any other zone is refused; an order is refused unless both the restaurant and the workplace are in the area; zones shown to every role. |
 | **US-01** As restaurant staff I register a customer in person. | Name, phone and organization recorded; identity checked in person; duplicates refused. |
 | **US-02** As a customer I sign in with an SMS code. | Single-use 6-digit code, 5-minute expiry, attempts limited, unregistered numbers refused. |
 | **US-11** As a customer I order before the deadline and get an order number. | Accepted before the deadline, refused after it (ORDER-001); unique FG-XXXXXX number; no duplicate on retry. |
@@ -63,7 +69,7 @@ The full prioritised backlog (31 stories, MoSCoW, story points) is in `docs/requ
 |---|---|---|---|
 | 0 | 14 Sep – 28 Sep | Requirements elicitation, specification (Lab 3), software design (Lab 4) | Done |
 | 1 | 1 Nov | Midterm MVP in one intensive session: full pre-order flow for all four roles, AI forecast, CI, documentation, first refactoring and performance pass with metrics | Done |
-| 2 | 2 Nov – 8 Nov | Peer review of the Sprint 1 code by all members, accessibility audit, deployment | Planned |
+| 2 | 2 Nov – 8 Nov | Peer review of the Sprint 1 code by all members, interviews with employees in Lac 3 and Zone Industrielle Le Kram to confirm the lunchtime-traffic problem, accessibility audit, deployment | Planned |
 | 3 | 9 Nov – 15 Nov | Stakeholder decisions on unresolved items (cancellation, failed delivery), real notifications | Planned |
 | 4 | 16 Nov – final | Hardening, final presentation, defence | Planned |
 
@@ -80,4 +86,5 @@ Following the SDD: a **layered** single deployable (presentation → business co
 | Unresolved business rules (cancellation, refunds, failed delivery) | Not invented; State pattern leaves one extension point per decision |
 | No real payment provider selected (Q-22) | Sandbox adapter; a provider is one new adapter |
 | Over-reliance on AI-generated code | CI gate on every PR (lint, tests, ≥ 60 % coverage), AI usage log, peer review from Sprint 2, team code walkthrough before the defence |
+| The traffic problem is assumed, not measured | Interview employees in both zones in Sprint 2; define a measure (e.g. lunch trips avoided per day) before claiming impact |
 | Data privacy of customers | Restaurant-scoped queries, minimal data on the live stream, no personal data sent to the LLM |

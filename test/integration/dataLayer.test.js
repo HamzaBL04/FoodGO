@@ -26,7 +26,7 @@ test('BR-09: a menu item cannot be read through another restaurant scope', () =>
   const { repos, seed } = createTestData();
   const item = seed.darLella.items[0];
   assert.ok(repos.restaurants.findItem(seed.darLella.restaurantId, item.menuItemId));
-  assert.equal(repos.restaurants.findItem(seed.campus.restaurantId, item.menuItemId), null);
+  assert.equal(repos.restaurants.findItem(seed.kramSnack.restaurantId, item.menuItemId), null);
 });
 
 test('D-01: a customer cannot be registered twice at the same restaurant', () => {
@@ -48,7 +48,7 @@ test('BR-04 / BR-16: a customer only lists restaurants that registered them', ()
   const forOmar = repos.restaurants.listForCustomer(seed.customers.omar.customerId).map((r) => r.name);
   assert.deepEqual(forOmar, ['Dar Lella']);
   const forYasmine = repos.restaurants.listForCustomer(seed.customers.yasmine.customerId).map((r) => r.name);
-  assert.deepEqual(forYasmine, ['Campus Bites', 'Dar Lella']);
+  assert.deepEqual(forYasmine, ['Dar Lella', 'Kram Snack']);
 });
 
 test('ineligible memberships are not listed (FR-17)', () => {

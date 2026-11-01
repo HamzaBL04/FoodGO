@@ -34,6 +34,8 @@ Every AI-assisted commit carries a `Co-Authored-By: Claude` trailer, and every p
 | 1 Nov 2026 | PR #8 docs | "Write the backlog with MoSCoW and points, the proposal, UML (use-case, class, 3 sequences, component) in Mermaid, OpenAPI, developer and user guides, this log, the ethics reflection." | `docs/**` | Direct (backlog: edited, see the record in `BACKLOG.md`) | OpenAPI drafted by a second Claude agent from the route files and cross-checked by script |
 | 1 Nov 2026 | PR #9 refactor | "Measure, then refactor: complexity warnings, N+1 queries, missing indexes; record before/after metrics." | Refactor commits + report | Direct | Metrics produced by scripts in the repo and reproducible |
 | 1 Nov 2026 | Demo video | "Script a Playwright walkthrough of every role with on-screen captions and record it." | `demo/` script and the recorded video | Direct | — |
+| 1 Nov 2026 | PR #13 Lab 6 environment | "Apply the CS 488 starter template to the existing repo: AI_CONTEXT.md and per-tool configs, workflow files, living docs, ADRs, Setup Report; verify the AI context with a fresh agent." | Template files, ADRs 0001–0006, `docs/setup-report.md`, `docs/ai/ai-context-verification.md` | Direct | Kept the midterm history instead of re-creating the repo (ADR-0003); the AI's attempt to merge without review was blocked, and the PR waits for a teammate |
+| 1 Nov 2026 | PR #14 service area | "Narrow the product to Lac 3 and Zone Industrielle Le Kram, to avoid heavy lunchtime traffic there: record the decision, enforce it in code, move the demo data, update every document and the demo video." | ADR-0007, FR-32/BR-17, `src/domain/serviceArea.js`, migration 003, 9 tests, docs, re-recorded video | Direct | **The service area and its purpose are Hamza's decision.** The AI's reading that restaurants must also be inside the area, and that cross-zone delivery stays allowed, is flagged in ADR-0007 for the team to confirm |
 
 ## Runtime AI (inside the product)
 
@@ -45,6 +47,7 @@ Every AI-assisted commit carries a `Co-Authored-By: Claude` trailer, and every p
 
 - Business rules marked UNRESOLVED in the specification (cancellation, refunds, failed delivery, real payment provider) were **not** invented.
 - Withdrawing A-13 and adding FR-31 was a team decision, recorded in the backlog and in PR #7.
+- Limiting FoodGO to Lac 3 and Zone Industrielle Le Kram (FR-32, BR-17) was a team decision. The open points it raises (cross-zone delivery, delivery windows, how to measure traffic) are listed in ADR-0007, not decided by the AI.
 - The team list, the repository, and the choice to submit were the team's.
 
 ## Appendix A — the human prompts, verbatim
@@ -59,6 +62,12 @@ The whole implementation came from one working session in the Claude app on 1 No
    > excuse me this is what we need instead
 4. With the "Midterm Instructions" page attached:
    > 1. 2.theres no code yet 3.repo created named foodGO 3.hamza ben labiedh, ali chamakh, mohamed krid. (but it will only be me and you (hamza)no need to get them involved they wont do the work) 5.I dont have them 6.go ahead. Also ignore A-13.
+5. With the Lab 6 handout and starter template attached (PR #13):
+   > read these and tell me what we should do in relation to this project
+6. (PR #13)
+   > 1.lab 6 should be done because in order to submit the midterm evaluation we should follow those steps 2.we can do it now by ourselves and I will keep my teammates updated until tomorrow we meet. also the midterm submission has been delayed for 5 november
+7. (PR #14)
+   > I want to make a change, so the app idea is not simply preordering food, but it is to preorder food only in lac 3, zone industrielle kram. To avoid heavy traffic during lunchtime in the area
 
 ## Appendix B — prompts the agent gave to helper agents
 

@@ -4,6 +4,7 @@ const { AppError } = require('../domain/errors');
 const { newId, newOrderId } = require('../domain/ids');
 const { fromMillimes } = require('../domain/money');
 const { evaluateDeadline, localDateString } = require('../domain/deadline');
+const { assertInServiceArea, zoneLabel } = require('../domain/serviceArea');
 const { ORDER_STATUS, transition, labelOf, allowedNext } = require('../domain/orderState');
 const { EVENTS } = require('./notificationComponent');
 const { createAuditor } = require('./audit');
@@ -92,6 +93,9 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
       customer.assertMembership(customerId, restaurantId); // BR-04, BR-16
       const restaurant = repos.restaurants.findById(restaurantId);
       if (!restaurant || restaurant.status !== 'ACTIVE') throw new AppError('ORDER-003', 'Restaurant is not taking orders');
+      // FR-32 / BR-17: only Lac 3 and Zone Industrielle Le Kram (ADR-0007).
+      const workplace = repos.customers.findCustomer(customerId);
+      assertInServiceArea({ restaurantZone: restaurant.serviceZone, workplaceZone: workplace.organizationZone });
 
       const now = clock.now();
       const gate = evaluateDeadline(now, restaurant.orderingDeadline); // BR-01
@@ -175,6 +179,7 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
         fullName: o.customerName,
         phoneNumber: o.customerPhone,
         organizationName: o.organizationName,
+        organizationZone: zoneLabel(o.organizationZone),
         eligible: o.customerEligible === 1,
       },
       allowedNext: allowedNext(o.status),
