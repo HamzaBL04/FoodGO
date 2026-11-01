@@ -1,4 +1,5 @@
 %% UC-03 Record payment status — Strategy + Adapter (SDD Figure 5)
+%% Lab 5 peer review: resolveStrategy is a self-call; replies return to their caller.
 sequenceDiagram
   autonumber
   participant OM as Order / Delivery Management
@@ -9,24 +10,31 @@ sequenceDiagram
 
   alt E_PAYMENT at checkout (inside T1)
     OM->>PC: recordAtCheckout(order)
-    PC->>ST: resolveStrategy("E_PAYMENT")
+    PC->>PC: resolveStrategy("E_PAYMENT")
+    PC->>ST: atCheckout(order)
     ST->>AD: capture(orderId, amount)
     alt captured
       AD-->>ST: providerReference
-      ST-->>PC: PAID
-      PC->>DB: insert payment PAID, project onto order (D-03)
+      ST-->>PC: PAID, providerReference
+      PC->>DB: insert payment PAID + project onto order (D-03)
+      PC-->>OM: PAID
     else declined / provider down
       AD-->>ST: PAY-001 / PAY-002
-      ST-->>OM: error — whole T1 rolls back, no order exists
+      ST-->>PC: error
+      PC-->>OM: error — whole T1 rolls back, no order exists
     end
   else CASH_ON_DELIVERY
     OM->>PC: recordAtCheckout(order)
-    PC->>ST: resolveStrategy("CASH_ON_DELIVERY")
+    PC->>PC: resolveStrategy("CASH_ON_DELIVERY")
+    PC->>ST: atCheckout(order)
     ST-->>PC: PENDING
-    PC->>DB: insert payment PENDING
+    PC->>DB: insert payment PENDING + project onto order (D-03)
+    PC-->>OM: PENDING
     note over OM,DB: later, inside T3 (delivery confirmation)
     OM->>PC: recordAtDelivery(order, cashCollected=true)
-    PC->>ST: atDelivery
+    PC->>PC: resolveStrategy("CASH_ON_DELIVERY")
+    PC->>ST: atDelivery(order, cashCollected)
     ST-->>PC: PAID, CASH-<orderId>
     PC->>DB: update payment + order projection in the same transaction (I-7)
+    PC-->>OM: PAID
   end

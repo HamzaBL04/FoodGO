@@ -22,7 +22,7 @@ We have not measured the traffic yet. The problem statement comes from the team'
 4. **BR-17:** an order is accepted only when both the restaurant and the customer's workplace are inside the area. Otherwise it is refused with `ORDER-003`. This also catches rows created before the migration, which have no zone.
 5. The area name is shown wherever a place is shown: the customer's restaurant list, the staff order queue and customer list, and the delivery person's pickup and destination.
 
-**Why a zone field when there is only one area?** It lets the database and the API refuse places outside the area, and it keeps one obvious place to change if the team ever serves a second area. The zone list lives in `src/domain/serviceArea.js`. Adding an area needs a new ADR, then one line there and one in the migration's `CHECK`.
+**Why a zone field when there is only one area?** It lets the database and the API refuse places outside the area, and it keeps one obvious place to change if the team ever serves a second area. The zone list lives in `src/domain/serviceArea.js`. Adding an area needs a new ADR, then one line there and one in the migration's `CHECK`. That ADR must also decide whether a restaurant in one area may serve a workplace in another: today `assertInServiceArea` only checks that both are inside a served area, which is enough while there is one (noted by the Lab 5 peer review).
 
 ## Not decided (do not invent)
 

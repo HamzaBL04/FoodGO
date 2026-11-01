@@ -44,7 +44,7 @@ Design sources (read these before designing anything new):
 - `src/server.js` — start-up (seeds demo data on first run) · `src/app.js` — Express app · `src/context.js` — composition root (wires everything)
 - `src/api/` — **presentation layer**: `routes/*Routes.js`, `middleware.js` (authenticate, `requireRole`, `requireRestaurantScope`, `validate`), `schemas.js`, `errorHandler.js`
 - `src/components/` — **business logic**, one per spec module: `auth`, `customerComponent`, `restaurantManagement`, `orderManagement`, `deliveryManagement`, `paymentComponent`, `notificationComponent`, `forecastComponent`, `admin`, plus `presenters.js`, `audit.js`
-- `src/domain/` — pure rules: `orderState.js` (State pattern), `deadline.js`, `money.js`, `forecast.js`, `errors.js`, `ids.js`, `clock.js`
+- `src/domain/` — pure rules: `orderState.js` (table-driven state machine, a State-pattern variant), `deadline.js`, `money.js`, `forecast.js`, `errors.js`, `ids.js`, `clock.js`
 - `src/repositories/` — **data access**, the only place with SQL; `unitOfWork()` for transactions
 - `src/adapters/` — third-party boundaries: payment (sandbox), SMS/OTP (sandbox), notifications, LLM (Anthropic)
 - `src/db/` — `schema.sql`, `migrations/NNN_*.sql`, `seedData.js`, `seed.js`

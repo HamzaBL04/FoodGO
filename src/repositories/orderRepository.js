@@ -111,6 +111,11 @@ function createOrderRepository(db) {
     },
 
     insertPayment: (p) => st.insertPayment.run({ providerReference: null, ...p }),
+    /** I-3 + D-03: the first payment row and the order's projection of its status, written together. */
+    insertPaymentAndProject: (p) => {
+      st.insertPayment.run({ providerReference: null, ...p });
+      st.projectPaymentStatus.run(p.status, p.createdAt, p.orderId);
+    },
     findCurrentPayment: (orderId) => mapRow(st.currentPayment.get(orderId)),
     /** D-03: the payment row is written and projected onto the order together. */
     updatePaymentAndProject: (payment, status, providerReference, at) => {

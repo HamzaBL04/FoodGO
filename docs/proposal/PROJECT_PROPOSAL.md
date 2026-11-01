@@ -39,7 +39,7 @@ Customers (employees of companies in Lac 3 / Zone Industrielle Le Kram), restaur
 
 ## 5. Key user stories and acceptance criteria
 
-The full prioritised backlog (32 stories, MoSCoW, story points) is in `docs/requirements/BACKLOG.md`. The core stories:
+The full prioritised backlog (33 stories, MoSCoW, story points) is in `docs/requirements/BACKLOG.md`. The core stories:
 
 | Story | Acceptance criteria |
 |---|---|

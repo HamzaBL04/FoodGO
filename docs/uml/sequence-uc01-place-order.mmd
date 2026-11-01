@@ -22,6 +22,7 @@ sequenceDiagram
     note over OM,DB: T1 — one SQLite transaction, all or nothing
     OM->>CC: assertMembership (BR-04, BR-16)
     OM->>DB: read restaurant + deadline
+    OM->>OM: restaurant ACTIVE? — else ORDER-003
     OM->>OM: assertInServiceArea (FR-32, BR-17) — ORDER-003
     OM->>OM: evaluateDeadline (BR-01) — ORDER-001
     OM->>PAY: assertMethodAvailable (FR-25/26)
@@ -29,7 +30,8 @@ sequenceDiagram
     OM->>DB: insert order (total, deadline snapshot D-04)
     OM->>DB: insert order items (price snapshot D-02)
     OM->>PAY: recordAtCheckout(order) (I-3)
-    PAY->>DB: insert payment row (strategy: cash PENDING / e-payment capture)
+    PAY->>DB: insert payment row + project status onto order (D-03, cash PENDING or e-payment capture)
+    PAY-->>OM: payment status
   end
   OM-->>API: order view
   OM-)EV: OrderSubmitted, OrderConfirmed (after commit, D-08)

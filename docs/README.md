@@ -10,7 +10,8 @@ Mapped to the CS 488 midterm instructions (submission checklist §5 and rubric �
 | Requirements traceability | [requirements/TRACEABILITY.md](requirements/TRACEABILITY.md) (generated: `npm run traceability`) |
 | Lab 3 — Software specification | [lab3-specification/](lab3-specification/) |
 | Lab 4 — Software Design Document (architecture rationale) | [lab4-sdd/FoodGO_Software_Design_Document.pdf](lab4-sdd/FoodGO_Software_Design_Document.pdf) |
-| **UML**: use-case, class, sequence ×3, component/deployment — images + Mermaid source | [uml/](uml/README.md) |
+| **Lab 5 — Design practical session** (methodology, components, classes, 2 sequences, patterns, peer review, SDD skeleton) | [lab5-design/Lab5_Design_Practical_Session_FoodGO.docx](lab5-design/Lab5_Design_Practical_Session_FoodGO.docx) · [markdown](lab5-design/LAB5_DESIGN_WORKSHEET.md) · [SDD §1–2](lab5-design/SDD_SKELETON_SECTIONS_1-2.md) |
+| **UML**: use-case, class, sequence ×4, component/deployment — images + Mermaid source | [uml/](uml/README.md) |
 | **Working code with tests and CI** | [`src/`](../src), [`test/`](../test), [CI workflow](../.github/workflows/ci.yml) |
 | Coding style guide | [STYLE_GUIDE.md](STYLE_GUIDE.md), [eslint.config.js](../eslint.config.js) |
 | **Refactor & optimisation report** with metrics | [REFACTOR_AND_OPTIMIZATION_REPORT.md](REFACTOR_AND_OPTIMIZATION_REPORT.md) |
