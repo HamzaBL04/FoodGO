@@ -9,7 +9,7 @@
 
 | Member | GitHub username | Collaborator | First PR merged |
 |---|---|---|---|
-| Hamza Ben Labiedh | `HamzaBL04` (owner) | yes | yes — PRs #1–#13 |
+| Hamza Ben Labiedh | `HamzaBL04` (owner) | yes | yes — PRs #1–#12 (self-merged before protection); Lab 6 PR #13 awaits a teammate's review |
 | Ali Chamakh | _TODO_ | _TODO_ | _TODO (intro PR, 2 Nov)_ |
 | Mohamed Krid | _TODO_ | _TODO_ | _TODO (intro PR, 2 Nov)_ |
 
@@ -32,7 +32,7 @@ Our repository already existed when Lab 6 started: the midterm MVP had been buil
 |---|---|
 | Clone test (fresh folder, README only) | ✅ `git clone` → `./scripts/setup.sh` (hooks enabled) → `cp .env.example .env` → `git status` does **not** list `.env` → `npm install` (no compiler) → `npm start` serves the app on the port set in `.env`; `/api/docs` returns 200 |
 | Tests / lint on the branch | ✅ 119 tests pass, coverage 97.3 % of server code, 0 lint problems |
-| CI on the Lab 6 PR | ✅ green (Node 22, Node 24, docs reminder) |
+| CI on the Lab 6 PR (#13) | see the PR checks |
 | Merged PR screenshot | ![Merged PR](images/merged-pr.png) — _TODO: add screenshot_ |
 | Green CI run screenshot | ![CI run](images/ci-green.png) — _TODO: add screenshot_ |
 
@@ -44,13 +44,20 @@ We configured one context file, [`AI_CONTEXT.md`](../AI_CONTEXT.md), and pointed
 
 ## Branch protection
 
-`main` is protected: pull request required, **1 approving review required**, status checks (both CI jobs) must pass, and the rules apply to administrators too. From now on nobody, including the owner, can merge without a teammate's approval. _If the GitHub plan does not allow protection on a private repository, see TODO 3._
+To be switched on by the repository owner in **Settings → Branches → Add branch protection rule** for `main` (the automation used for this setup is not allowed to change protection settings):
+
+- ✅ Require a pull request before merging
+- ✅ Require approvals: **1**
+- ✅ Require status checks to pass: `Lint + tests (Node 22)`, `Lint + tests (Node 24)`, `Docs reminder (never fails)`
+- ✅ Do not allow bypassing the above settings
+
+Once it is on, nobody, including the owner, can merge without a teammate's approval. Free GitHub accounts can only protect **public** repositories: use GitHub Pro (free with the GitHub Student Developer Pack) or make the repository public.
 
 ## Still TODO before implementation continues
 
 1. **Ali and Mohamed** (team meeting, 2 Nov): accept the collaborator invitation, clone, run `./scripts/setup.sh`, then each open an intro PR adding their GitHub username to this report and the README team list; Hamza reviews theirs, they review each other's. Fill in the members table above.
 2. Add the two screenshots to `docs/images/` (a merged PR page and the green Actions run).
-3. Confirm branch protection is active on GitHub (Settings → Branches). Free accounts can only protect **public** repositories; the options are GitHub Pro (free with the GitHub Student Developer Pack) or making the repository public.
+3. **Turn on branch protection** for `main` as described above, and screenshot the rule page for this report.
 4. Invite the instructor (`aziz.souiai@musteducation.tn`) as a collaborator.
 5. Team code walkthrough so every member can explain the Sprint 1 code before the defence.
 
