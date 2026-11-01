@@ -13,6 +13,7 @@ const { createSandboxNotificationAdapter } = require('./adapters/notificationAda
 const { createPaymentComponent } = require('./components/paymentComponent');
 const { createNotificationComponent } = require('./components/notificationComponent');
 const { createOrderManagement } = require('./components/orderManagement');
+const { createDeliveryManagement } = require('./components/deliveryManagement');
 
 /**
  * Composition root: wires repositories, adapters and business components.
@@ -32,13 +33,14 @@ function createContext({ db, clock = systemClock(), adapters = {}, config = defa
   const notifications = createNotificationComponent({ notificationAdapter, logger });
   const payments = createPaymentComponent({ repos, clock, paymentAdapter });
   const orders = createOrderManagement({ repos, clock, customer, payments, notifications });
+  const delivery = createDeliveryManagement({ repos, clock, orders, payments, notifications });
 
   return {
     config,
     clock,
     repos,
     adapters: { sms, payment: paymentAdapter, notification: notificationAdapter },
-    components: { auth, admin, restaurantManagement, customer, notifications, payments, orders },
+    components: { auth, admin, restaurantManagement, customer, notifications, payments, orders, delivery },
   };
 }
 

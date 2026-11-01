@@ -12,6 +12,7 @@ const { adminRoutes } = require('./api/routes/adminRoutes');
 const { staffRoutes, organizationRoutes } = require('./api/routes/staffRoutes');
 const { customerRoutes } = require('./api/routes/customerRoutes');
 const { customerOrderRoutes, restaurantOrderRoutes, eventRoutes } = require('./api/routes/orderRoutes');
+const { deliveryRoutes } = require('./api/routes/deliveryRoutes');
 
 /**
  * Builds the Express application (Presentation layer, SDD §2.2).
@@ -43,6 +44,7 @@ function createApp(ctx, { logger = console } = {}) {
   api.use('/restaurants/:restaurantId', staffRoutes(ctx));
   api.use('/customer/orders', customerOrderRoutes(ctx));
   api.use('/customer', customerRoutes(ctx));
+  api.use('/delivery', deliveryRoutes(ctx));
   api.use('/events', eventRoutes(ctx));
   app.use('/api/v1', api);
 
