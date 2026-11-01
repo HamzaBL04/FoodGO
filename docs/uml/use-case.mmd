@@ -1,0 +1,56 @@
+%% FoodGO — Use-case diagram (UC-01..UC-15). Mermaid has no native use-case
+%% type: actors are person nodes, use cases are stadium shapes, the large box
+%% is the system boundary, and dotted arrows are «include» relations.
+flowchart LR
+  Customer(["👤 Customer"])
+  Staff(["👤 Restaurant staff"])
+  Courier(["👤 Delivery person"])
+  Admin(["👤 Platform admin"])
+
+  subgraph FoodGO["FoodGO system boundary"]
+    subgraph CU[" "]
+      direction TB
+      SIGN(["Sign in with SMS code"])
+      UC05(["UC-05 View my registered restaurants"])
+      UC06(["UC-06 Browse a restaurant menu"])
+      UC01(["UC-01 Place a morning pre-order"])
+      UC13(["UC-13 Select a payment method"])
+      UC12(["UC-12 View order and delivery status"])
+    end
+    subgraph RE[" "]
+      direction TB
+      UC04(["UC-04 Register a customer in person"])
+      UC08(["UC-08 Verify customer, set eligibility"])
+      UC07(["UC-07 Manage menu and availability"])
+      DL(["Set ordering deadline and payment options"])
+      UC09(["UC-09 Manage delivery personnel"])
+      UC02(["UC-02 Assign a delivery person"])
+      UC15(["UC-15 View AI prep forecast (FR-31)"])
+    end
+    subgraph DE[" "]
+      direction TB
+      UC10(["UC-10 View assigned orders"])
+      UC11(["UC-11 Start delivery"])
+      CONF(["Confirm delivery"])
+      UC03(["UC-03 Record payment status"])
+    end
+    subgraph AD[" "]
+      direction TB
+      UC14(["UC-14 Provision staff accounts"])
+      MON(["Monitor platform activity"])
+    end
+  end
+
+  Pay[["Tunisian e-payment provider"]]
+  SMS[["SMS / OTP service"]]
+  LLM[["LLM, optional"]]
+
+  Customer --- SIGN & UC05 & UC06 & UC01 & UC12
+  UC01 -. include .-> UC13
+  Staff --- UC04 & UC08 & UC07 & DL & UC09 & UC02 & UC15
+  Courier --- UC10 & UC11 & CONF
+  CONF -. include .-> UC03
+  Admin --- UC14 & MON
+  UC13 --- Pay
+  SIGN --- SMS
+  UC15 --- LLM

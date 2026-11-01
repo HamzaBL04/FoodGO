@@ -1,0 +1,37 @@
+%% UC-01 Place a morning pre-order — transaction T1 (SDD §4.4, Figure 3)
+sequenceDiagram
+  autonumber
+  actor C as Customer
+  participant UI as Customer UI
+  participant API as /customer/orders (route)
+  participant AUTH as Auth & Access Control
+  participant OM as Order Management
+  participant CC as Customer Component
+  participant PAY as Payment Component
+  participant DB as Repositories (SQLite)
+  participant EV as Notifications (Observer)
+
+  C->>UI: choose items, payment method
+  UI->>API: POST order + Idempotency-Key
+  API->>AUTH: authenticate + requireRole(CUSTOMER)
+  AUTH-->>API: principal
+  API->>API: validate body (zod) — VAL-001
+  API->>OM: submitOrder(principal, cart)
+  OM->>DB: idempotency lookup
+  rect rgb(255, 246, 220)
+    note over OM,DB: T1 — one SQLite transaction, all or nothing
+    OM->>CC: assertMembership (BR-04, BR-16)
+    OM->>DB: read restaurant + deadline
+    OM->>OM: evaluateDeadline (BR-01) — ORDER-001
+    OM->>PAY: assertMethodAvailable (FR-25/26)
+    OM->>DB: read item availability (BR-02) — ORDER-002, same restaurant (I-5)
+    OM->>DB: insert order (total, deadline snapshot D-04)
+    OM->>DB: insert order items (price snapshot D-02)
+    OM->>PAY: recordAtCheckout(order) (I-3)
+    PAY->>DB: insert payment row (strategy: cash PENDING / e-payment capture)
+  end
+  OM-->>API: order view
+  OM-)EV: OrderSubmitted, OrderConfirmed (after commit, D-08)
+  EV-)UI: SSE to this restaurant's staff and this customer only (BR-15)
+  API-->>UI: 201 Created, order FG-XXXXXX
+  UI-->>C: confirmation + order progress

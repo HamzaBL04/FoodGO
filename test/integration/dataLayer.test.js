@@ -93,3 +93,12 @@ test('history seeding produces delivered, paid orders for the forecast', () => {
   const counts = repos.platform.counts();
   assert.ok(counts.ordersTotal > 100, `expected >100 historical orders, got ${counts.ordersTotal}`);
 });
+
+test('BR-07 / BR-06: the platform stores no delivery equipment or employment data', () => {
+  const { db } = createTestData();
+  const columns = db.prepare("SELECT name FROM pragma_table_info('delivery_person')").all().map((c) => c.name);
+  for (const forbidden of ['vehicle', 'equipment', 'salary', 'shift', 'employer']) {
+    assert.equal(columns.some((c) => c.includes(forbidden)), false, forbidden);
+  }
+  assert.ok(columns.includes('restaurant_id'), 'every delivery person belongs to a restaurant');
+});

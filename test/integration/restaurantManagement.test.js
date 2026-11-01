@@ -27,7 +27,7 @@ test('customers and delivery people cannot use staff routes', async () => {
   }
 });
 
-test('FR-07: staff add, edit and soft-remove menu items', async () => {
+test('FR-07 / BR-03: staff add, edit and soft-remove menu items', async () => {
   const { app, seed } = createTestApp();
   const auth = await staffOf(app);
   const base = `/api/v1/restaurants/${seed.darLella.restaurantId}/menu`;
@@ -52,7 +52,7 @@ test('FR-07: staff add, edit and soft-remove menu items', async () => {
   assert.equal(invalid.status, 400);
 });
 
-test('FR-08: availability toggle is visible to the customer', async () => {
+test('FR-08 / FR-06: availability toggle is visible to the customer', async () => {
   const { app, seed } = createTestApp();
   const auth = await staffOf(app);
   const item = seed.darLella.items[0];
@@ -82,7 +82,7 @@ test('settings: deadline and payment methods; at least one method must stay enab
   assert.equal(badTime.status, 400);
 });
 
-test('UC-04: in-person registration creates a person and a membership, then OTP sign-in works', async () => {
+test('UC-04 / FR-01–FR-04: in-person registration creates a person and a membership, then OTP sign-in works', async () => {
   const { app, seed, ctx } = createTestApp();
   const auth = await staffOf(app);
   const url = `/api/v1/restaurants/${seed.darLella.restaurantId}/customers`;
@@ -155,7 +155,7 @@ test('FR-17: making a customer ineligible removes the restaurant from their list
   assert.equal(otp.status, 401);
 });
 
-test('BR-04: a customer cannot read the menu of a restaurant that did not register them', async () => {
+test('BR-04 / FR-06: a customer cannot read the menu of a restaurant that did not register them', async () => {
   const { app, seed } = createTestApp();
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
   const res = await request(app).get(`/api/v1/customer/restaurants/${seed.campus.restaurantId}/menu`).set('Authorization', customer);
@@ -187,7 +187,7 @@ test('organizations: list and create, duplicates refused', async () => {
   assert.equal(dup.status, 400);
 });
 
-test('customer profile and restaurant list carry deadline information', async () => {
+test('FR-05: customer profile and restaurant list carry deadline information', async () => {
   const { app } = createTestApp();
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.yasmine.phone);
   const me = await request(app).get('/api/v1/customer/me').set('Authorization', customer);

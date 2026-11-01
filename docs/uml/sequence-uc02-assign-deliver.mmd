@@ -1,0 +1,35 @@
+%% UC-02 Assign a delivery person and complete delivery — T2 + T3 (SDD Figure 4)
+sequenceDiagram
+  autonumber
+  actor S as Restaurant staff
+  actor D as Delivery person
+  participant DM as Delivery Management
+  participant OM as Order Management (OrderState)
+  participant PAY as Payment Component
+  participant DB as Repositories
+  participant EV as Notifications
+  actor C as Customer
+
+  S->>DM: assignOrder(orderId, deliveryPersonId)
+  rect rgb(232, 240, 250)
+    note over DM,DB: T2
+    DM->>DB: person belongs to the order's restaurant? (I-8, BR-06)
+    DM->>DB: insert assignment (before dispatch, BR-10)
+    DM->>OM: applyTransition(→ ASSIGNED, guard: assignment exists)
+  end
+  DM-)EV: DeliveryAssigned
+  EV-)D: live update (own assignments only)
+  D->>DM: listMyAssignments() — scoped query (BR-08)
+  D->>DM: startDelivery(assignmentId)
+  DM->>OM: applyTransition(→ OUT_FOR_DELIVERY, guard: assignment STARTED)
+  DM-)EV: DeliveryStatusChanged
+  EV-)C: "On the way"
+  D->>DM: confirmDelivery(assignmentId, cashCollected)
+  rect rgb(232, 245, 225)
+    note over DM,DB: T3
+    DM->>OM: applyTransition(→ DELIVERED, guard: actor is the assignee — BR-11)
+    DM->>DB: complete assignment
+    DM->>PAY: recordAtDelivery (UC-03)
+  end
+  DM-)EV: OrderStatusChanged, PaymentStatusChanged
+  EV-)C: "Delivered"

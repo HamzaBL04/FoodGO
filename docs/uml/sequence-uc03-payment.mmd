@@ -1,0 +1,32 @@
+%% UC-03 Record payment status — Strategy + Adapter (SDD Figure 5)
+sequenceDiagram
+  autonumber
+  participant OM as Order / Delivery Management
+  participant PC as Payment Component
+  participant ST as PaymentMethodStrategy
+  participant AD as Payment Adapter (sandbox, provider unresolved Q-22)
+  participant DB as Repositories
+
+  alt E_PAYMENT at checkout (inside T1)
+    OM->>PC: recordAtCheckout(order)
+    PC->>ST: resolveStrategy("E_PAYMENT")
+    ST->>AD: capture(orderId, amount)
+    alt captured
+      AD-->>ST: providerReference
+      ST-->>PC: PAID
+      PC->>DB: insert payment PAID, project onto order (D-03)
+    else declined / provider down
+      AD-->>ST: PAY-001 / PAY-002
+      ST-->>OM: error — whole T1 rolls back, no order exists
+    end
+  else CASH_ON_DELIVERY
+    OM->>PC: recordAtCheckout(order)
+    PC->>ST: resolveStrategy("CASH_ON_DELIVERY")
+    ST-->>PC: PENDING
+    PC->>DB: insert payment PENDING
+    note over OM,DB: later, inside T3 (delivery confirmation)
+    OM->>PC: recordAtDelivery(order, cashCollected=true)
+    PC->>ST: atDelivery
+    ST-->>PC: PAID, CASH-<orderId>
+    PC->>DB: update payment + order projection in the same transaction (I-7)
+  end

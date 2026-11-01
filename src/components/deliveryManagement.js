@@ -135,7 +135,7 @@ function createDeliveryManagement({ repos, clock, orders, payments, notification
   }
 
   /**
-   * UC-02 / UC-03 / FR-23 / BR-11 — transaction T3: verify the confirming
+   * UC-02 / UC-03 / FR-23 / FR-28 / BR-11 — transaction T3: verify the confirming
    * person owns the assignment, complete it, transition the order and apply
    * the payment strategy's delivery step, all or nothing.
    */

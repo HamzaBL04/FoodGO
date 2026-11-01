@@ -30,7 +30,7 @@ function createRestaurantManagement({ repos, clock, auth, sms }) {
     return item;
   }
 
-  // ---- Menu (FR-07, FR-08, BR-03) -------------------------------------------
+  // ---- Menu (FR-07, FR-08, BR-03: restaurants manage their own menus) -------------------------------------------
 
   function getMenu(restaurantId) {
     return repos.restaurants.listItems(restaurantId).map(menuItemView);

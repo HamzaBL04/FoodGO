@@ -23,7 +23,7 @@ async function assign(app, seed, orderId, deliveryPersonId = seed.darLella.couri
   return { staff, res };
 }
 
-test('System scenario (spec §16.3): order -> prepare -> assign -> deliver -> cash recorded', async () => {
+test('System scenario (spec §16.3, FR-19–FR-24): order -> prepare -> assign -> deliver -> cash recorded', async () => {
   const { app, seed, ctx } = createTestApp();
   const seen = [];
   ctx.components.notifications.subscribe((e) => seen.push(`${e.type}:${e.status || ''}`));
@@ -91,7 +91,7 @@ test('an order cannot be assigned twice (re-assignment is unresolved)', async ()
   assert.equal(again.res.status, 409);
 });
 
-test('BR-08: a delivery person sees and acts on their own assignments only', async () => {
+test('BR-08 / FR-20: a delivery person sees and acts on their own assignments only', async () => {
   const { app, seed } = createTestApp();
   const { order } = await placeOrder(app, seed);
   await assign(app, seed, order.orderId, seed.darLella.couriers.karimId);
@@ -106,7 +106,7 @@ test('BR-08: a delivery person sees and acts on their own assignments only', asy
   assert.equal((await request(app).post(`/api/v1/delivery/assignments/${assignmentId}/confirm`).set('Authorization', amine).send({})).status, 404);
 });
 
-test('BR-10 / BR-11: delivery must be started before it can be confirmed, and only once', async () => {
+test('BR-10 / BR-11 / FR-22 / FR-23: delivery must be started before it can be confirmed, and only once', async () => {
   const { app, seed } = createTestApp();
   const { order } = await placeOrder(app, seed);
   await assign(app, seed, order.orderId);

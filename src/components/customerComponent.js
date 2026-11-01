@@ -40,7 +40,7 @@ function createCustomerComponent({ repos, clock }) {
     return m;
   }
 
-  /** UC-06 / FR-06, FR-08: unavailable items are shown but not orderable. */
+  /** UC-06 / FR-06, FR-08, FR-09 (selection happens on this menu): unavailable items are shown but not orderable. */
   function getMenu(customerId, restaurantId) {
     assertMembership(customerId, restaurantId);
     const r = repos.restaurants.findById(restaurantId);

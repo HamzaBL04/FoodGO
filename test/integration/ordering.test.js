@@ -16,7 +16,7 @@ async function submit(app, auth, body, headers = {}) {
   return req.send(body);
 }
 
-test('UC-01: a customer places a cash pre-order; total and confirmation are correct', async () => {
+test('UC-01 / FR-09–FR-11, FR-14: a customer places a cash pre-order; total and confirmation are correct', async () => {
   const { app, seed, ctx } = createTestApp();
   const events = [];
   ctx.components.notifications.subscribe((e) => events.push(e.type));
@@ -37,7 +37,7 @@ test('UC-01: a customer places a cash pre-order; total and confirmation are corr
   assert.equal(mine.body.orders[0].orderId, o.orderId);
 });
 
-test('BR-12 / I-3: every order has a payment row created with it', async () => {
+test('BR-12 / FR-28 / I-3: every order has a payment row created with it', async () => {
   const { app, seed, ctx } = createTestApp();
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
   const res = await submit(app, auth, { restaurantId: seed.darLella.restaurantId, items: items(seed), paymentMethod: 'CASH_ON_DELIVERY' });
@@ -47,7 +47,7 @@ test('BR-12 / I-3: every order has a payment row created with it', async () => {
   assert.equal(payment.amountMillimes, 39500);
 });
 
-test('E-payment is captured at checkout and projected onto the order (D-03)', async () => {
+test('FR-25, FR-27, FR-28, BR-13: e-payment is captured at checkout and projected onto the order (D-03)', async () => {
   const { app, seed, ctx } = createTestApp();
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
   const res = await submit(app, auth, { restaurantId: seed.darLella.restaurantId, items: items(seed), paymentMethod: 'E_PAYMENT' });
@@ -161,7 +161,7 @@ test('FR-26: a disabled payment method is refused', async () => {
   assert.equal(res.status, 400);
 });
 
-test('validation: empty cart, zero quantity and repeated lines', async () => {
+test('FR-10 validation: empty cart, zero quantity and repeated lines', async () => {
   const { app, seed } = createTestApp();
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
   const rid = seed.darLella.restaurantId;
