@@ -10,9 +10,10 @@ const { mapRow, mapRows, requireScope } = require('./helpers');
 function createOrderRepository(db) {
   const st = {
     insertOrder: db.prepare(`INSERT INTO orders (order_id, customer_id, restaurant_id, status, total_millimes,
-        payment_method, payment_status, created_at, service_date, deadline_snapshot, updated_at)
+        payment_method, payment_status, created_at, service_date, deadline_snapshot, updated_at, client_request_id)
       VALUES (@orderId, @customerId, @restaurantId, @status, @totalMillimes, @paymentMethod, @paymentStatus,
-        @createdAt, @serviceDate, @deadlineSnapshot, @createdAt)`),
+        @createdAt, @serviceDate, @deadlineSnapshot, @createdAt, @clientRequestId)`),
+    orderByRequest: db.prepare('SELECT order_id FROM orders WHERE customer_id = ? AND client_request_id = ?'),
     insertItem: db.prepare(`INSERT INTO order_item (order_item_id, order_id, menu_item_id, name_snapshot, quantity, unit_price_millimes)
       VALUES (@orderItemId, @orderId, @menuItemId, @nameSnapshot, @quantity, @unitPriceMillimes)`),
     itemsForOrder: db.prepare('SELECT * FROM order_item WHERE order_id = ? ORDER BY name_snapshot'),
@@ -57,7 +58,8 @@ function createOrderRepository(db) {
   };
 
   return {
-    insertOrder: (o) => st.insertOrder.run(o),
+    insertOrder: (o) => st.insertOrder.run({ clientRequestId: null, ...o }),
+    findOrderIdByRequest: (customerId, clientRequestId) => st.orderByRequest.get(customerId, clientRequestId)?.order_id || null,
     insertOrderItem: (i) => st.insertItem.run(i),
     listItems: (orderId) => mapRows(st.itemsForOrder.all(orderId)),
 

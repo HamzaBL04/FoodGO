@@ -11,6 +11,7 @@ const { authRoutes } = require('./api/routes/authRoutes');
 const { adminRoutes } = require('./api/routes/adminRoutes');
 const { staffRoutes, organizationRoutes } = require('./api/routes/staffRoutes');
 const { customerRoutes } = require('./api/routes/customerRoutes');
+const { customerOrderRoutes, restaurantOrderRoutes, eventRoutes } = require('./api/routes/orderRoutes');
 
 /**
  * Builds the Express application (Presentation layer, SDD §2.2).
@@ -38,8 +39,11 @@ function createApp(ctx, { logger = console } = {}) {
   api.use('/auth', authLimiter, authRoutes(ctx));
   api.use('/admin', adminRoutes(ctx));
   api.use('/organizations', organizationRoutes(ctx));
+  api.use('/restaurants/:restaurantId/orders', restaurantOrderRoutes(ctx));
   api.use('/restaurants/:restaurantId', staffRoutes(ctx));
+  api.use('/customer/orders', customerOrderRoutes(ctx));
   api.use('/customer', customerRoutes(ctx));
+  api.use('/events', eventRoutes(ctx));
   app.use('/api/v1', api);
 
   app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
