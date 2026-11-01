@@ -107,7 +107,7 @@ The restaurant **Prep forecast** (FR-31, added when the team withdrew assumption
 - **Failure lifecycle is UNRESOLVED** (cancellation, restaurant rejection, failed delivery, refunds): not built; `OrderState` is the single extension point.
 - **Sandbox providers:** no real Tunisian payment or SMS provider yet (Q-22); demo mode shows the SMS code and is off by default in production.
 - **Delivery location** is the customer's registered organization and its zone (PROPOSED; Q-02).
-- **Service area open points** (ADR-0007): restaurants outside the area cannot join for now; staggered delivery windows and a traffic measure are not decided.
+- **Service area** (ADR-0007): restaurants outside the area cannot join (team decision). Still open: staggered delivery windows and a traffic measure.
 - **Single process + SQLite** is deliberate for this scale (ADR-0002); revisit conditions are in SDD §2.1.4.
 - **Cash not collected** at confirmation leaves the payment PENDING; what happens next is a stakeholder decision.
 - **No deployment yet;** availability targets cannot be measured until there is one.

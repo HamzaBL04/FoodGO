@@ -18,8 +18,9 @@ We have not measured the traffic yet. The problem statement comes from the team'
 
 1. **FoodGO operates in one area only: Lac 3 / Zone Industrielle Le Kram.** The product's purpose is stated as reducing lunchtime traffic there by moving lunch ordering to the morning.
 2. **FR-32:** every restaurant and every workplace (organization) records its zone. Today there is exactly one zone, `LAC3_ZI_KRAM`. The API refuses any other value (`VAL-001`), and so does the database (`CHECK` in migration `003_service_area.sql`).
-3. **BR-17:** an order is accepted only when both the restaurant and the customer's workplace are inside the area. Otherwise it is refused with `ORDER-003`. This also catches rows created before the migration, which have no zone.
-4. The area name is shown wherever a place is shown: the customer's restaurant list, the staff order queue and customer list, and the delivery person's pickup and destination.
+3. **Restaurants must be located inside the area to join FoodGO.** A restaurant outside it cannot join, even if it would deliver into the area (team decision, confirmed by Hamza on 1 Nov 2026).
+4. **BR-17:** an order is accepted only when both the restaurant and the customer's workplace are inside the area. Otherwise it is refused with `ORDER-003`. This also catches rows created before the migration, which have no zone.
+5. The area name is shown wherever a place is shown: the customer's restaurant list, the staff order queue and customer list, and the delivery person's pickup and destination.
 
 **Why a zone field when there is only one area?** It lets the database and the API refuse places outside the area, and it keeps one obvious place to change if the team ever serves a second area. The zone list lives in `src/domain/serviceArea.js`. Adding an area needs a new ADR, then one line there and one in the migration's `CHECK`.
 
@@ -27,7 +28,6 @@ We have not measured the traffic yet. The problem statement comes from the team'
 
 These are open questions for the team. The code deliberately does not enforce any of them:
 
-- **Restaurants outside the area that deliver into it.** Not allowed for now, because every restaurant must be inside the area. Revisit if a nearby restaurant asks.
 - **Delivery time windows or staggered drop-offs** to spread deliveries over the lunch break. These would serve the traffic goal, but no rule has been agreed.
 - **How traffic reduction is measured** (for example, trips avoided per day). This is needed to validate the goal; for now it is only a business-goal statement.
 

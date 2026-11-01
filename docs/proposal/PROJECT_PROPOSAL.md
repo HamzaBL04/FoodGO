@@ -31,11 +31,11 @@ Customers (employees of companies in Lac 3 / Zone Industrielle Le Kram), restaur
 
 ## 4. Scope
 
-**Service area:** Lac 3 / Zone Industrielle Le Kram only. Every restaurant and every workplace records its zone, and an order is taken only when both are inside the area (FR-32, BR-17).
+**Service area:** Lac 3 / Zone Industrielle Le Kram only. Every restaurant and every workplace records its zone, and an order is taken only when both are inside the area (FR-32, BR-17). Restaurants located outside the area cannot join FoodGO.
 
 **In scope for the first release:** in-person customer registration and SMS-code sign-in, menus and availability, morning pre-ordering with deadline, customer verification, delivery assignment and confirmation, cash and e-payment status, live order tracking, administration, and an advisory AI demand forecast.
 
-**Out of scope until stakeholders decide (spec §19.7):** other areas of Tunis, restaurants outside the area and staggered delivery windows (ADR-0007), cancellation, refunds, failed-delivery handling, a specific real payment provider, GPS tracking, delivery fees, self-service registration, a platform-owned delivery fleet.
+**Out of scope until stakeholders decide (spec §19.7):** other areas of Tunis and staggered delivery windows (ADR-0007), cancellation, refunds, failed-delivery handling, a specific real payment provider, GPS tracking, delivery fees, self-service registration, a platform-owned delivery fleet.
 
 ## 5. Key user stories and acceptance criteria
 
