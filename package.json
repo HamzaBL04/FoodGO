@@ -1,0 +1,37 @@
+{
+  "name": "foodgo",
+  "version": "0.1.0",
+  "description": "FoodGO — pre-order food delivery platform: customers pre-order in the morning, restaurants prepare and deliver with their own staff at lunch.",
+  "main": "src/server.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/db/seed.js",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "coverage": "c8 --check-coverage --lines 60 --reporter=text --reporter=lcov --reporter=json-summary node --test --test-concurrency=1 \"test/**/*.test.js\"",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.2",
+    "helmet": "^8.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "c8": "^12.0.0",
+    "eslint": "^9.39.5",
+    "globals": "^17.14.0",
+    "supertest": "^7.3.1"
+  }
+}
