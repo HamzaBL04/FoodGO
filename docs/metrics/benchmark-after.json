@@ -1,0 +1,53 @@
+{
+  "at": "2026-11-01T15:07:55.941Z",
+  "node": "v22.23.4",
+  "iterations": 200,
+  "dataset": {
+    "restaurants": 2,
+    "customers": 15,
+    "staff": 2,
+    "deliveryPersonnel": 3,
+    "ordersTotal": 2200
+  },
+  "results": [
+    {
+      "endpoint": "GET restaurant order board (300 orders today)",
+      "p50": 9.82,
+      "p95": 16.19,
+      "p99": 20.66,
+      "mean": 10.64
+    },
+    {
+      "endpoint": "GET customer order history",
+      "p50": 2.5,
+      "p95": 4.22,
+      "p99": 5.57,
+      "mean": 2.81
+    },
+    {
+      "endpoint": "GET delivery assignments (courier with history)",
+      "p50": 5.43,
+      "p95": 8.9,
+      "p99": 10.44,
+      "mean": 6.35
+    },
+    {
+      "endpoint": "GET prep forecast",
+      "p50": 3.26,
+      "p95": 4.77,
+      "p99": 7.05,
+      "mean": 3.62
+    },
+    {
+      "endpoint": "POST submit order (transaction T1)",
+      "p50": 1.63,
+      "p95": 2.12,
+      "p99": 6.68,
+      "mean": 1.71
+    }
+  ],
+  "memory": {
+    "rssMB": 176.3,
+    "heapUsedMB": 30.8
+  }
+}

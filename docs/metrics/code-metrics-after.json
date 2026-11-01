@@ -1,0 +1,32 @@
+{
+  "at": "2026-11-01T15:07:48.519Z",
+  "complexity": {
+    "functions": 529,
+    "average": 1.78,
+    "max": 9,
+    "over10": 0,
+    "over7": 3,
+    "top5": [
+      "Function 'createContext' (src/context.js:24) = 9",
+      "Function 'insertHistoricalOrder' (src/db/seedData.js:148) = 9",
+      "Function 'forecastItem' (src/domain/forecast.js:50) = 8",
+      "Function 'audit' (src/components/audit.js:9) = 7",
+      "Function 'findAccount' (src/components/auth.js:36) = 7"
+    ]
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 0,
+    "byRule": {}
+  },
+  "coverage": {
+    "lines": 99.55,
+    "branches": 93.85,
+    "functions": 95.91,
+    "statements": 99.55
+  },
+  "size": {
+    "srcLines": 4126,
+    "testLines": 1438
+  }
+}
