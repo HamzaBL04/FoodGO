@@ -39,6 +39,7 @@ async function main(inputs) {
     blockquote { border-left: 3px solid #2350b8; margin: 6pt 0; padding: 2pt 10pt; color: #4a5675; }
     img { max-width: 100%; }
     tr, img { page-break-inside: avoid; }
+    h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
   </style></head><body>${body}</body></html>`;
   const browser = await chromium.launch();
   const page = await browser.newPage();

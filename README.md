@@ -132,6 +132,7 @@ Node.js 22.14+ · Express 5 · SQLite (better-sqlite3) · zod · helmet · plain
 │   ├── architecture.md
 │   ├── decisions/
 │   ├── images/
+│   ├── lab2-srs/
 │   ├── lab3-practical/
 │   ├── lab3-specification/
 │   ├── lab4-sdd/
