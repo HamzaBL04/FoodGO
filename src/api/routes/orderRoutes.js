@@ -36,6 +36,11 @@ function restaurantOrderRoutes({ components }) {
   router.post('/:orderId/start-preparation', (req, res) => {
     res.json({ order: orders.startPreparation(req.principal, req.params.restaurantId, req.params.orderId) });
   });
+  // FR-19: assign to one of this restaurant's own delivery personnel (Delivery Management).
+  router.post('/:orderId/assign', validate(schemas.assign), (req, res) => {
+    const { restaurantId, orderId } = req.params;
+    res.json({ order: components.delivery.assignOrder(req.principal, restaurantId, orderId, req.valid.deliveryPersonId) });
+  });
 
   return router;
 }
