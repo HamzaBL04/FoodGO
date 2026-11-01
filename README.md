@@ -17,7 +17,7 @@ CS 488 AI-First Software Engineering, MUST University, Fall 2026. Team: Hamza Be
 
 ## Run it
 
-Requirements: **Node.js 22 LTS or newer** (`node -v`). Nothing else: the database is a local SQLite file and every external service has a built-in sandbox.
+Requirements: **Node.js 22.14 LTS or newer** (`node -v`). Nothing else: the database is a local SQLite file and every external service has a built-in sandbox.
 
 ```bash
 git clone https://github.com/HamzaBL04/foodGO.git
@@ -30,11 +30,11 @@ Open **http://localhost:3000**. On first start the app creates a demo database w
 
 ```bash
 npm test             # 100+ unit and integration tests
-npm run coverage     # tests + coverage report (CI requires >= 60 % lines)
+npm run coverage     # tests + coverage of all server code (CI requires >= 60 % lines)
 npm run lint         # ESLint
 ```
 
-**If `npm install` fails:** check `node -v` is 22 or newer. The SQLite driver ships prebuilt binaries for Windows, macOS and Linux; the project's `.npmrc` stops npm from trying to compile it, so no C++ toolchain is needed. If port 3000 is busy, run `PORT=3001 npm start` (PowerShell: `$env:PORT=3001; npm start`).
+**If `npm install` fails:** check `node -v` is 22.14 or newer. The SQLite driver ships prebuilt binaries for Windows, macOS and Linux; the project's `.npmrc` stops npm from trying to compile it, so no C++ toolchain is needed. If port 3000 is busy, run `PORT=3001 npm start` (PowerShell: `$env:PORT=3001; npm start`).
 
 API documentation: **http://localhost:3000/api/docs** (Swagger UI, from [`docs/api/openapi.yaml`](docs/api/openapi.yaml)).
 
@@ -71,7 +71,13 @@ flowchart LR
 
 Detailed diagrams (use-case, class, sequences, component) are in [`docs/uml`](docs/uml).
 
+## Demo video
+
+[`demo/foodgo-demo.mp4`](demo/foodgo-demo.mp4): a 2-minute captioned walkthrough of all four roles ([storyboard](demo/README.md)).
+
 ## Project documents
+
+Code style: [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md), enforced by ESLint in CI.
 
 Everything the course asks for is in [`docs/`](docs/README.md): proposal, backlog and NFRs, traceability matrix, UML, OpenAPI, developer guide, user guide, refactor and optimisation report, AI usage log, ethics reflection, academic honesty statement, and the Lab 3 specification and Lab 4 SDD.
 

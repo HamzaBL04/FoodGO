@@ -4,7 +4,7 @@
 
 We used AI in two different ways, and they carry different risks.
 
-**AI as a development tool.** Claude (Anthropic) drafted almost all of the code, tests, diagrams and documentation of this midterm MVP from our own Lab 3 specification and Lab 4 design. We gave it the goals, the constraints and the decisions. It produced pull requests that went through the same gate as any human code: lint, more than 100 automated tests, a coverage threshold and a review of each PR against the SDD. The full record is in `AI_USAGE_LOG.md`, and every AI-assisted commit carries a `Co-Authored-By` trailer.
+**AI as a development tool.** Claude (Anthropic) drafted almost all of the code, tests, diagrams and documentation of this midterm MVP from our own Lab 3 specification and Lab 4 design. We gave it the goals, the constraints and the decisions. It produced pull requests that went through the same automated gate as any human code: lint, more than 100 automated tests and a coverage threshold. The implementation was done by one team member directing the AI; the pull requests were self-merged once CI passed, without a second human reviewer. We say this plainly because it is the weakest point of our process (see the last section). The full record is in `AI_USAGE_LOG.md`, and every AI-assisted commit carries a `Co-Authored-By` trailer.
 
 **AI as a product feature.** The restaurant's *Prep forecast* screen estimates how many of each dish the kitchen should prepare and, if an API key is configured, asks Claude to turn those numbers into a three-sentence note. Our specification originally excluded AI (assumption A-13). We withdrew that assumption on 1 November 2026 because AI is the subject of this course and because two of our own business goals (BG-03 "help restaurants predict demand" and BG-04 "improve meal preparation planning") are better served with a forecast than without one.
 
@@ -24,8 +24,8 @@ We used AI in two different ways, and they carry different risks.
 
 **Licences and intellectual property.** AI-generated code may resemble code it was trained on. We used it to build standard patterns (Express routes, SQL, repository classes) and wrote nothing that reproduces a known project. All dependencies are permissively licensed npm packages listed in `package.json`; the two fonts are under the SIL Open Font License, included in `src/public/fonts`. We credit the AI in commits and documents because the course asks for transparency about authorship, and we checked the provider's terms of use before adopting it.
 
-**Academic honesty.** Our course encourages AI-assisted work with disclosure. We disclose: the AI wrote most of the lines; the team owned the requirements, the design, the decisions recorded in the log, and the review. The signed statement in `docs/ACADEMIC_HONESTY_STATEMENT.md` says the same.
+**Academic honesty.** Our course encourages AI-assisted work with disclosure. We disclose: the AI wrote most of the lines; the team owned the requirements (Lab 3) and the design (Lab 4); the product decisions recorded in the log were made by the member who directed the implementation. The signed statement in `docs/ACADEMIC_HONESTY_STATEMENT.md` says the same.
 
 ## What we would do differently
 
-Start the implementation earlier, so that a human-written first version of at least one component can be compared with the AI version. Pair-review each PR live instead of reviewing after the fact. Collect real order data from a pilot restaurant before trusting the forecast, since the current history is synthetic demo data.
+Start the implementation earlier, so that a human-written first version of at least one component can be compared with the AI version. Have a second member review each PR before it is merged; in Sprint 1 nobody but the author looked at the PRs, and automated tests were the only check. Collect real order data from a pilot restaurant before trusting the forecast, since the current history is synthetic demo data.

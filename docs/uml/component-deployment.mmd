@@ -40,7 +40,10 @@ flowchart TB
   Clients -- "HTTPS JSON + SSE, cookie session" --> MW
   MW --> R1 & R2 & R3
   R1 & R2 & R3 --> B
-  B --> REPO
+  AUTH & CUS & RM & OM & DM & PC & FC --> REPO
+  OM --> PC
+  OM & DM --> NC
+  DM --> OM
   PC & AUTH & NC & FC --> ADP
   REPO --> DB
   ADP -.-> EXT1 & EXT2 & EXT3
