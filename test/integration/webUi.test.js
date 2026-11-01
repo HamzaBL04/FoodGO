@@ -31,3 +31,14 @@ test('meta endpoint exposes demo mode only', async () => {
   const res = await request(app).get('/api/v1/meta');
   assert.deepEqual(Object.keys(res.body).sort(), ['demoMode', 'name', 'version']);
 });
+
+test('API documentation is served from docs/api/openapi.yaml', async () => {
+  const { app } = createTestApp();
+  const spec = await request(app).get('/api/openapi.json');
+  assert.equal(spec.status, 200);
+  assert.match(spec.body.openapi, /^3\./);
+  assert.ok(Object.keys(spec.body.paths).length >= 30);
+  const ui = await request(app).get('/api/docs/');
+  assert.equal(ui.status, 200);
+  assert.match(ui.text, /swagger-ui/);
+});

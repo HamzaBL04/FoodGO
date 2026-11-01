@@ -1,8 +1,11 @@
 'use strict';
 
+const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const helmet = require('helmet');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yaml');
 const cookieParser = require('cookie-parser');
 const { rateLimit } = require('express-rate-limit');
 const { authenticate } = require('./api/middleware');
@@ -48,6 +51,14 @@ function createApp(ctx, { logger = console } = {}) {
   api.use('/delivery', deliveryRoutes(ctx));
   api.use('/events', eventRoutes(ctx));
   app.use('/api/v1', api);
+
+  // API documentation (OpenAPI 3) — docs/api/openapi.yaml
+  const specFile = path.join(__dirname, '..', 'docs', 'api', 'openapi.yaml');
+  if (fs.existsSync(specFile)) {
+    const spec = YAML.parse(fs.readFileSync(specFile, 'utf8'));
+    app.get('/api/openapi.json', (_req, res) => res.json(spec));
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec, { customSiteTitle: 'FoodGO API' }));
+  }
 
   app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 

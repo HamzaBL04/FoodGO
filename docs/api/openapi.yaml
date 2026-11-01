@@ -1,0 +1,3587 @@
+openapi: 3.0.3
+
+info:
+  title: FoodGO API
+  version: 0.1.0
+  description: |
+    REST API of **FoodGO**, a pre-order food delivery platform for Tunisia: customers
+    pre-order in the morning before the restaurant's ordering deadline, and the
+    restaurant prepares and delivers at lunch with its own delivery personnel.
+
+    ## Roles
+    Every session has exactly one role:
+
+    | Role | Signs in with | Scope |
+    |---|---|---|
+    | `CUSTOMER` | phone number + one-time SMS code (`/auth/otp/*`) | own profile, own orders, menus of the restaurants that registered them |
+    | `STAFF` | identity + password (`/auth/signin`) | **own restaurant only** |
+    | `DELIVERY` | identity + password (`/auth/signin`) | own delivery assignments only |
+    | `ADMIN` | identity + password (`/auth/signin`) | platform administration (restaurants, staff accounts, monitoring); never orders |
+
+    ## Authentication
+    Send the session token either as `Authorization: Bearer <token>` or in the
+    `fg_session` cookie (HttpOnly, SameSite=Lax, 12 h; set by sign-in). When both are
+    present the `Authorization` header wins. An unknown or expired token is treated as
+    "not signed in": routes that need a role answer `401 AUTH-001`; a signed-in caller
+    with the wrong role gets `403 AUTH-002`.
+
+    **Restaurant scope.** In every `/restaurants/{restaurantId}/...` path the
+    `restaurantId` must be the calling staff member's own restaurant; any other value
+    is refused with `403 AUTH-002` ("You can only act on your own restaurant"),
+    even if that restaurant exists.
+
+    ## Error model
+    All errors (including unknown routes) share one JSON body:
+
+    ```json
+    { "error": { "code": "VAL-001", "message": "items: an order needs at least one item" } }
+    ```
+
+    | Code | HTTP | Meaning |
+    |---|---|---|
+    | `VAL-001` | 400 | Invalid input (schema violation, malformed JSON, business validation). Only the first issue is reported, as `<field path>: <message>`. |
+    | `AUTH-001` | 401 | Not signed in / authentication failed. Also used (with HTTP 429) when the `/auth` rate limit is hit. |
+    | `AUTH-002` | 403 | Authorization denied (wrong role, other restaurant, no membership). |
+    | `NOT-FOUND` | 404 | Resource (or route) not found within the caller's scope. |
+    | `ORDER-001` | 409 | Ordering deadline passed (BR-01). |
+    | `ORDER-002` | 409 | A menu item is unavailable (BR-02). |
+    | `ORDER-003` | 422 | Order creation failed (restaurant not taking orders). |
+    | `PAY-001` | 402 | Payment failed / declined by the provider. |
+    | `PAY-002` | 503 | Payment provider unavailable. |
+    | `DEL-001` | 409 | Delivery operation or order status transition refused. |
+    | `SYS-001` | 500 | Internal error (no stack trace or SQL is ever returned). |
+
+    Request bodies are JSON (max 100 kB). Unknown body fields are ignored. String
+    fields marked *trimmed* have surrounding whitespace removed before length and
+    pattern checks.
+
+    ## Money
+    Amounts are Tunisian dinars (TND, 3 decimals; 1 TND = 1000 millimes). Fields such
+    as `price`, `total`, `unitPrice` are JSON numbers in TND with at most 3 decimals;
+    fields ending in `Millimes` are the exact integer amounts.
+
+    ## Health check
+    `GET /health` lives **outside** `/api/v1` (at the server root, no auth) and returns
+    `{"status":"ok","time":"<ISO-8601>"}`. It is therefore not listed under `paths`.
+
+servers:
+  - url: /api/v1
+    description: Same origin as the web app; all API routes are mounted under /api/v1.
+
+tags:
+  - name: Auth
+    description: Sign-in (password and SMS OTP), sign-out and current session. Rate limited to 200 requests per 15 minutes per client.
+  - name: Customer
+    description: Customer Interface (SDD §5.1.2) — profile, registered restaurants and their menus.
+  - name: Orders
+    description: Order submission and tracking (customer) and the restaurant's order queue (staff).
+  - name: Restaurant
+    description: Restaurant Interface for STAFF (SDD §5.1.3) — settings, menu, customers, delivery personnel, forecast. The path restaurantId must be the caller's own restaurant.
+  - name: Delivery
+    description: Delivery Interface (SDD §5.1.4) — a delivery person's own assignments (BR-08).
+  - name: Admin
+    description: Platform administration (SDD §5.1.5) — restaurants, staff accounts, monitoring. ADMIN only.
+  - name: Organizations
+    description: Workplaces, campuses and institutions customers belong to (FR-04). STAFF and ADMIN.
+  - name: Events
+    description: Live order status stream over Server-Sent Events (FR-24).
+  - name: Meta
+    description: Service metadata.
+
+paths:
+
+  # ---------------------------------------------------------------- Meta
+  /meta:
+    get:
+      tags: [Meta]
+      operationId: getMeta
+      summary: Service metadata
+      description: Returns the service name, version and whether demo mode is on (SDD §2.2; demo mode per Q-22, §5.2.2). Public.
+      security: []
+      responses:
+        '200':
+          description: Service metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meta'
+              example:
+                name: FoodGO
+                version: 0.1.0
+                demoMode: true
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Auth
+  /auth/signin:
+    post:
+      tags: [Auth]
+      operationId: signIn
+      summary: Password sign-in (staff, delivery, admin)
+      description: Signs in a STAFF, DELIVERY or ADMIN account with identity and password and sets the fg_session cookie (SDD §5.2.1, §5.3). Public.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+            example:
+              role: STAFF
+              identity: staff@darlella.tn
+              password: 'Staff#2026'
+      responses:
+        '200':
+          description: Signed in. The token is returned in the body and also set as the `fg_session` cookie.
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/SetSessionCookie'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+              example:
+                token: 3q2-7wEXAMPLEtokenBase64Url_Hq9vK1mZ0aL4sT8uYcR2dN6
+                session:
+                  role: STAFF
+                  subjectId: stf_8MZQ4RTK2HXA
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  fullName: Sonia Gharbi
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: AUTH-001 — invalid identity or password, or the account is not active.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: AUTH-001, message: Invalid identity or password }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/otp/request:
+    post:
+      tags: [Auth]
+      operationId: requestOtp
+      summary: Request a customer sign-in code by SMS
+      description: Step 1 of customer sign-in — sends a 6-digit one-time code by SMS to a phone number registered in person by a restaurant (BR-05, FR-03). Public.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+            example:
+              phoneNumber: '+21698333444'
+      responses:
+        '201':
+          description: |
+            Challenge created and code sent. The code is valid for 5 minutes and allows
+            at most 5 verification attempts. `demoCode` is present **only when the server
+            runs in demo mode** (no real SMS provider integrated, Q-22).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpChallenge'
+              examples:
+                demoMode:
+                  summary: Demo mode (code echoed)
+                  value:
+                    challengeId: otp_K7M2QX9RT4HB
+                    expiresInSeconds: 300
+                    demoCode: '482913'
+                production:
+                  summary: Demo mode off
+                  value:
+                    challengeId: otp_K7M2QX9RT4HB
+                    expiresInSeconds: 300
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: AUTH-001 — the phone number is unknown, the customer is not active, or has no active eligible restaurant membership.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: AUTH-001
+                  message: This phone number is not registered with a FoodGO restaurant. Ask the restaurant to register you in person.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      operationId: verifyOtp
+      summary: Verify the SMS code and sign the customer in
+      description: Step 2 of customer sign-in — verifies the one-time code, consumes the challenge and opens a CUSTOMER session (BR-05, FR-03). Public.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerifyRequest'
+            example:
+              challengeId: otp_K7M2QX9RT4HB
+              code: '482913'
+      responses:
+        '200':
+          description: Signed in as CUSTOMER. The token is returned and set as the `fg_session` cookie.
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/SetSessionCookie'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+              example:
+                token: Zr8EXAMPLEtokenBase64Url_c3VwZXJzZWNyZXQtc2Vzc2lvbg
+                session:
+                  role: CUSTOMER
+                  subjectId: cus_9QW4T7KPMX2H
+                  restaurantId: null
+                  fullName: Omar Trabelsi
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: AUTH-001 — unknown, expired, already used or exhausted challenge (5 attempts), or wrong code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: AUTH-001, message: Invalid or expired code }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/signout:
+    post:
+      tags: [Auth]
+      operationId: signOut
+      summary: Sign out
+      description: Deletes the current session (if any) and clears the fg_session cookie (SDD §5.2.1). Works with or without a valid session.
+      security:
+        - {}
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '204':
+          description: Signed out (also returned when there was no session).
+          headers:
+            Set-Cookie:
+              description: Clears the session cookie.
+              schema:
+                type: string
+                example: 'fg_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/session:
+    get:
+      tags: [Auth]
+      operationId: getSession
+      summary: Current session
+      description: Describes the signed-in principal with display name and restaurant name (SDD §5.2.1). Any role.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The current session.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [session]
+                properties:
+                  session:
+                    $ref: '#/components/schemas/SessionDetail'
+              examples:
+                staff:
+                  summary: Staff member of Dar Lella
+                  value:
+                    session:
+                      role: STAFF
+                      subjectId: stf_8MZQ4RTK2HXA
+                      restaurantId: rst_4H7KQ2M9XPTB
+                      fullName: Sonia Gharbi
+                      restaurantName: Dar Lella
+                customer:
+                  summary: Customer
+                  value:
+                    session:
+                      role: CUSTOMER
+                      subjectId: cus_9QW4T7KPMX2H
+                      restaurantId: null
+                      fullName: Omar Trabelsi
+                      restaurantName: null
+        '401':
+          description: AUTH-001 — not signed in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: AUTH-001, message: Not signed in }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Customer
+  /customer/me:
+    get:
+      tags: [Customer]
+      operationId: getCustomerProfile
+      summary: My profile
+      description: Returns the signed-in customer's own record and organization (SDD §5.1.2). CUSTOMER only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The customer's profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [profile]
+                properties:
+                  profile:
+                    $ref: '#/components/schemas/CustomerProfile'
+              example:
+                profile:
+                  customerId: cus_9QW4T7KPMX2H
+                  fullName: Omar Trabelsi
+                  phoneNumber: '+21698333444'
+                  organization:
+                    organizationId: org_3RX7K2PQ9MTB
+                    name: Lac 2 Tech Park
+                    type: WORKPLACE
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /customer/restaurants:
+    get:
+      tags: [Customer]
+      operationId: listMyRestaurants
+      summary: Restaurants that registered me
+      description: Lists the active restaurants where the customer holds an active, eligible membership, with today's deadline status (UC-05, FR-05, BR-04, BR-16). CUSTOMER only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The customer's restaurants, ordered by name.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [restaurants]
+                properties:
+                  restaurants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CustomerRestaurant'
+              example:
+                restaurants:
+                  - restaurantId: rst_4H7KQ2M9XPTB
+                    name: Dar Lella
+                    address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                    paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
+                    orderingDeadline: '23:30'
+                    orderingOpen: true
+                    minutesLeft: 856
+                    serviceDate: '2026-11-02'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /customer/restaurants/{restaurantId}/menu:
+    get:
+      tags: [Customer]
+      operationId: getCustomerMenu
+      summary: Menu of one of my restaurants
+      description: Returns the restaurant summary and its menu; unavailable items are listed but cannot be ordered (UC-06, FR-06, FR-08, BR-04, BR-16). CUSTOMER only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      responses:
+        '200':
+          description: Restaurant summary and menu items (removed items excluded), ordered by name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerMenu'
+              example:
+                restaurant:
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  name: Dar Lella
+                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
+                  orderingDeadline: '23:30'
+                  orderingOpen: true
+                  minutesLeft: 856
+                  serviceDate: '2026-11-02'
+                items:
+                  - menuItemId: item_B2K9QX7MRT4H
+                    name: "Brik à l'oeuf"
+                    description: Crispy pastry with egg, tuna and parsley
+                    price: 3.5
+                    priceMillimes: 3500
+                    available: true
+                  - menuItemId: item_7TPM3KQ2XH9R
+                    name: Couscous au poulet
+                    description: Friday classic, with vegetables and chickpeas
+                    price: 14.5
+                    priceMillimes: 14500
+                    available: true
+                  - menuItemId: item_Q4HX8MT2KP7B
+                    name: Kafteji
+                    description: Fried vegetables, egg and chopped peppers
+                    price: 8
+                    priceMillimes: 8000
+                    available: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: AUTH-002 — caller is not a CUSTOMER, or has no active eligible membership at this restaurant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: AUTH-002, message: You are not registered with this restaurant }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Orders (customer)
+  /customer/orders:
+    post:
+      tags: [Orders]
+      operationId: submitOrder
+      summary: Submit a pre-order
+      description: Submits a morning pre-order atomically (transaction T1) — membership, deadline, availability, total, payment (UC-01, FR-09–FR-15, FR-25, FR-26, BR-01, BR-02, BR-04, BR-13, BR-16, I-3, D-02, D-04). CUSTOMER only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: |
+            Optional duplicate-submission protection. A retry by the same customer with the
+            same key returns the **original** order with `200` instead of creating a second
+            one (the request body is still validated but otherwise not compared, and
+            deadline/availability are not re-checked). Without the header every call
+            creates a new order. A malformed key is rejected with `400 VAL-001`
+            ("Invalid Idempotency-Key").
+          schema:
+            type: string
+            pattern: '^[A-Za-z0-9-]{8,64}$'
+          example: 3f6c2a1e-9b4d-4c7a-8e21-5d0f7b6a9c13
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitOrderRequest'
+            example:
+              restaurantId: rst_4H7KQ2M9XPTB
+              items:
+                - menuItemId: item_7TPM3KQ2XH9R
+                  quantity: 1
+                - menuItemId: item_B2K9QX7MRT4H
+                  quantity: 2
+                - menuItemId: item_C9RM4TK7QX2P
+                  quantity: 1
+              paymentMethod: CASH_ON_DELIVERY
+      responses:
+        '201':
+          description: Order created and confirmed. `OrderSubmitted` and `OrderConfirmed` events are published after commit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitOrderResponse'
+              examples:
+                created:
+                  $ref: '#/components/examples/SubmitOrderBody'
+        '200':
+          description: Replay — an order with this `Idempotency-Key` already exists for this customer; its current state is returned and nothing new is created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitOrderResponse'
+              examples:
+                replayed:
+                  $ref: '#/components/examples/SubmitOrderBody'
+        '400':
+          description: |
+            VAL-001 — body violates the schema, malformed JSON, invalid `Idempotency-Key`,
+            an item is not on this restaurant's menu (or was removed), more than 50 of one
+            item after merging repeated lines, or the payment method is not enabled at this
+            restaurant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                schema:
+                  value:
+                    error: { code: VAL-001, message: 'items: an order needs at least one item' }
+                notOnMenu:
+                  value:
+                    error: { code: VAL-001, message: "An item is not on this restaurant's menu" }
+                paymentMethod:
+                  value:
+                    error: { code: VAL-001, message: This payment method is not available at this restaurant }
+                idempotencyKey:
+                  value:
+                    error: { code: VAL-001, message: Invalid Idempotency-Key }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentFailed'
+        '403':
+          description: AUTH-002 — caller is not a CUSTOMER, or has no active eligible membership at this restaurant (BR-04, BR-16).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: AUTH-002, message: You are not registered with this restaurant }
+        '409':
+          $ref: '#/components/responses/OrderConflict'
+        '422':
+          $ref: '#/components/responses/OrderCreationFailed'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/PaymentUnavailable'
+    get:
+      tags: [Orders]
+      operationId: listMyOrders
+      summary: My orders
+      description: Lists the customer's own orders, newest first, at most 50 (UC-12, SDD §5.2.1). CUSTOMER only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The customer's orders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orders]
+                properties:
+                  orders:
+                    type: array
+                    maxItems: 50
+                    items:
+                      $ref: '#/components/schemas/Order'
+              examples:
+                myOrders:
+                  $ref: '#/components/examples/MyOrdersBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /customer/orders/{orderId}:
+    get:
+      tags: [Orders]
+      operationId: getMyOrder
+      summary: One of my orders
+      description: Returns one of the customer's own orders with items and delivery progress (UC-12, SDD §5.2.1). CUSTOMER only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrderIdPath'
+      responses:
+        '200':
+          description: The order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order]
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+              examples:
+                submitted:
+                  $ref: '#/components/examples/MyOrderSubmittedBody'
+                outForDelivery:
+                  $ref: '#/components/examples/MyOrderOutForDeliveryBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Orders (restaurant queue)
+  /restaurants/{restaurantId}/orders:
+    get:
+      tags: [Restaurant, Orders]
+      operationId: listRestaurantOrders
+      summary: Restaurant order queue for a service day
+      description: Lists the restaurant's orders for one service day with customer verification info and allowed next statuses (FR-15, FR-16). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - name: date
+          in: query
+          required: false
+          description: Service date (restaurant-local, `YYYY-MM-DD`). Defaults to today; a value not matching the pattern is ignored (today is used) rather than rejected.
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+          example: '2026-11-02'
+      responses:
+        '200':
+          description: Orders of that service day, oldest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orders]
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RestaurantOrder'
+              examples:
+                queue:
+                  $ref: '#/components/examples/RestaurantQueueBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/orders/{orderId}/start-preparation:
+    post:
+      tags: [Restaurant, Orders]
+      operationId: startPreparation
+      summary: Start preparing an order
+      description: Moves a SUBMITTED order to IN_PREPARATION through the order state machine and publishes OrderStatusChanged (FR-15, FR-16, D-09). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - $ref: '#/components/parameters/OrderIdPath'
+      responses:
+        '200':
+          description: The updated order as it appears in the restaurant queue.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order]
+                properties:
+                  order:
+                    $ref: '#/components/schemas/RestaurantOrder'
+              examples:
+                inPreparation:
+                  $ref: '#/components/examples/RestaurantOrderInPreparationBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: DEL-001 — the order is not in a status that can go to IN_PREPARATION.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: DEL-001, message: An order cannot go from IN_PREPARATION to IN_PREPARATION }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/orders/{orderId}/assign:
+    post:
+      tags: [Restaurant, Orders]
+      operationId: assignOrder
+      summary: Assign an order to one of the restaurant's delivery personnel
+      description: Creates the delivery assignment and moves the order to ASSIGNED in one transaction T2 (UC-02 step 1, FR-19, BR-06, BR-10, I-8; re-assignment unresolved Q-20). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - $ref: '#/components/parameters/OrderIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequest'
+            example:
+              deliveryPersonId: dlv_5KX2MQ9TRH7P
+      responses:
+        '200':
+          description: The updated order (status ASSIGNED, `delivery` filled in).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order]
+                properties:
+                  order:
+                    $ref: '#/components/schemas/RestaurantOrder'
+              examples:
+                assigned:
+                  $ref: '#/components/examples/RestaurantOrderAssignedBody'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/DeliveryConflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Restaurant (staff)
+  /restaurants/{restaurantId}/settings:
+    get:
+      tags: [Restaurant]
+      operationId: getRestaurantSettings
+      summary: Restaurant settings
+      description: Returns the ordering deadline and payment-method settings (FR-12, FR-13, FR-26). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [settings]
+                properties:
+                  settings:
+                    $ref: '#/components/schemas/RestaurantSettings'
+              example:
+                settings:
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  name: Dar Lella
+                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  orderingDeadline: '23:30'
+                  cashOnDeliveryEnabled: true
+                  ePaymentEnabled: true
+                  paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [Restaurant]
+      operationId: updateRestaurantSettings
+      summary: Update restaurant settings
+      description: Replaces the ordering deadline and enabled payment methods; at least one method must stay enabled, and placed orders keep their deadline snapshot (FR-12, FR-13, FR-26, BR-12, D-04). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsUpdateRequest'
+            example:
+              orderingDeadline: '10:30'
+              cashOnDeliveryEnabled: true
+              ePaymentEnabled: false
+      responses:
+        '200':
+          description: The updated settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [settings]
+                properties:
+                  settings:
+                    $ref: '#/components/schemas/RestaurantSettings'
+              example:
+                settings:
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  name: Dar Lella
+                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  orderingDeadline: '10:30'
+                  cashOnDeliveryEnabled: true
+                  ePaymentEnabled: false
+                  paymentMethods: [CASH_ON_DELIVERY]
+        '400':
+          description: VAL-001 — schema violation (e.g. deadline not HH:MM) or both payment methods disabled (BR-12).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                deadline:
+                  value:
+                    error: { code: VAL-001, message: 'orderingDeadline: must be HH:MM' }
+                br12:
+                  value:
+                    error: { code: VAL-001, message: At least one payment method must stay enabled (BR-12) }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/menu:
+    get:
+      tags: [Restaurant]
+      operationId: getRestaurantMenu
+      summary: Restaurant menu (staff view)
+      description: Lists the restaurant's menu items, available or not, excluding removed ones (FR-07, FR-08, BR-03). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      responses:
+        '200':
+          description: Menu items ordered by name.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MenuItem'
+              example:
+                items:
+                  - menuItemId: item_B2K9QX7MRT4H
+                    name: "Brik à l'oeuf"
+                    description: Crispy pastry with egg, tuna and parsley
+                    price: 3.5
+                    priceMillimes: 3500
+                    available: true
+                  - menuItemId: item_7TPM3KQ2XH9R
+                    name: Couscous au poulet
+                    description: Friday classic, with vegetables and chickpeas
+                    price: 14.5
+                    priceMillimes: 14500
+                    available: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/menu/items:
+    post:
+      tags: [Restaurant]
+      operationId: addMenuItem
+      summary: Add a menu item
+      description: Adds an item to the restaurant's published menu; the price is stored in millimes (FR-07, FR-08, BR-03). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemCreateRequest'
+            example:
+              name: Lablabi
+              description: Chickpea soup with cumin, harissa and bread
+              price: 6.5
+              available: true
+      responses:
+        '201':
+          description: The created item.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [item]
+                properties:
+                  item:
+                    $ref: '#/components/schemas/MenuItem'
+              example:
+                item:
+                  menuItemId: item_M8QK2TX4RH9P
+                  name: Lablabi
+                  description: Chickpea soup with cumin, harissa and bread
+                  price: 6.5
+                  priceMillimes: 6500
+                  available: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          description: NOT-FOUND — the restaurant has no published menu.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: NOT-FOUND, message: This restaurant has no published menu }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/menu/items/{menuItemId}:
+    patch:
+      tags: [Restaurant]
+      operationId: updateMenuItem
+      summary: Update a menu item or its availability
+      description: Partially updates an item; a price change never alters placed orders, which keep their unit-price snapshot (FR-07, FR-08, BR-03, D-02). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - $ref: '#/components/parameters/MenuItemIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemPatchRequest'
+            examples:
+              availability:
+                summary: Mark sold out
+                value:
+                  available: false
+              price:
+                summary: Change price
+                value:
+                  price: 15
+      responses:
+        '200':
+          description: The updated item.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [item]
+                properties:
+                  item:
+                    $ref: '#/components/schemas/MenuItem'
+              example:
+                item:
+                  menuItemId: item_7TPM3KQ2XH9R
+                  name: Couscous au poulet
+                  description: Friday classic, with vegetables and chickpeas
+                  price: 14.5
+                  priceMillimes: 14500
+                  available: false
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Restaurant]
+      operationId: removeMenuItem
+      summary: Remove a menu item
+      description: Soft-removes an item (hidden and unavailable) so items on placed orders still resolve (FR-07, BR-03, SDD §5.1.3, I-5). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - $ref: '#/components/parameters/MenuItemIdPath'
+      responses:
+        '204':
+          description: Removed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/customers:
+    get:
+      tags: [Restaurant]
+      operationId: listRestaurantCustomers
+      summary: Registered customers
+      description: Lists the customers registered at this restaurant, newest registration first (FR-01–FR-04, FR-16, D-01). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      responses:
+        '200':
+          description: Registered customers.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [customers]
+                properties:
+                  customers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RestaurantCustomerSummary'
+              example:
+                customers:
+                  - customerId: cus_9QW4T7KPMX2H
+                    fullName: Omar Trabelsi
+                    phoneNumber: '+21698333444'
+                    organizationName: Lac 2 Tech Park
+                    eligible: true
+                    status: ACTIVE
+                    registeredAt: '2026-11-01T09:12:44.103Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Restaurant]
+      operationId: registerCustomer
+      summary: Register a customer in person
+      description: Registers a customer after in-person identity verification; an existing person (same phone) only gains a membership, and a welcome SMS is sent (UC-04, FR-01–FR-04, BR-05, D-01, I-11). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCustomerRequest'
+            example:
+              fullName: Omar Trabelsi
+              phoneNumber: '+21698333444'
+              organizationId: org_3RX7K2PQ9MTB
+              eligible: true
+              identityVerified: true
+      responses:
+        '201':
+          description: Registered. `existingPerson` is true when the phone number already belonged to a FoodGO customer (only a membership was added).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [customer]
+                properties:
+                  customer:
+                    $ref: '#/components/schemas/RegisteredCustomer'
+              example:
+                customer:
+                  customerId: cus_9QW4T7KPMX2H
+                  fullName: Omar Trabelsi
+                  phoneNumber: '+21698333444'
+                  organizationId: org_3RX7K2PQ9MTB
+                  organizationName: Lac 2 Tech Park
+                  organizationType: WORKPLACE
+                  eligible: true
+                  status: ACTIVE
+                  registeredAt: '2026-11-02T08:01:10.420Z'
+                  existingPerson: false
+        '400':
+          description: VAL-001 — schema violation (including `identityVerified` not `true`, BR-05), unknown organization, or customer already registered at this restaurant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                identity:
+                  value:
+                    error: { code: VAL-001, message: 'identityVerified: identity must be verified in person before registration (BR-05)' }
+                duplicate:
+                  value:
+                    error: { code: VAL-001, message: This customer is already registered at your restaurant }
+                organization:
+                  value:
+                    error: { code: VAL-001, message: Unknown organization }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/customers/{customerId}:
+    get:
+      tags: [Restaurant]
+      operationId: getRestaurantCustomer
+      summary: Customer verification details
+      description: Returns what staff need to verify a customer registered at this restaurant (FR-16). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - $ref: '#/components/parameters/CustomerIdPath'
+      responses:
+        '200':
+          description: The customer's membership details.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [customer]
+                properties:
+                  customer:
+                    $ref: '#/components/schemas/RestaurantCustomerDetail'
+              example:
+                customer:
+                  customerId: cus_9QW4T7KPMX2H
+                  fullName: Omar Trabelsi
+                  phoneNumber: '+21698333444'
+                  organizationId: org_3RX7K2PQ9MTB
+                  organizationName: Lac 2 Tech Park
+                  organizationType: WORKPLACE
+                  eligible: true
+                  status: ACTIVE
+                  registeredAt: '2026-11-01T09:12:44.103Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          description: NOT-FOUND — customer not registered at this restaurant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: NOT-FOUND, message: Customer not registered at this restaurant }
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Restaurant]
+      operationId: updateRestaurantCustomer
+      summary: Change a customer's eligibility or membership status
+      description: Updates this restaurant's eligibility decision and/or membership status for the customer (FR-17, BR-04). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+        - $ref: '#/components/parameters/CustomerIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPatchRequest'
+            example:
+              eligible: false
+      responses:
+        '200':
+          description: The updated membership details.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [customer]
+                properties:
+                  customer:
+                    $ref: '#/components/schemas/RestaurantCustomerDetail'
+              example:
+                customer:
+                  customerId: cus_9QW4T7KPMX2H
+                  fullName: Omar Trabelsi
+                  phoneNumber: '+21698333444'
+                  organizationId: org_3RX7K2PQ9MTB
+                  organizationName: Lac 2 Tech Park
+                  organizationType: WORKPLACE
+                  eligible: false
+                  status: ACTIVE
+                  registeredAt: '2026-11-01T09:12:44.103Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/forecast:
+    get:
+      tags: [Restaurant]
+      operationId: getForecast
+      summary: AI-assisted demand forecast and prep plan
+      description: Advisory per-dish demand forecast for the next service day with an optional LLM summary; never changes orders, payments, eligibility or menu (FR-31 PROPOSED, BG-03, BG-04). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      responses:
+        '200':
+          description: The forecast. If the LLM is disabled or fails, `summary` falls back to a template (`summarySource` = `template`).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [forecast]
+                properties:
+                  forecast:
+                    $ref: '#/components/schemas/Forecast'
+              example:
+                forecast:
+                  restaurantName: Dar Lella
+                  serviceDate: '2026-11-02'
+                  weekday: Monday
+                  historyDays: 24
+                  totals: { expected: 31, low: 24, high: 38, alreadyOrdered: 3 }
+                  dishes:
+                    - menuItemId: item_7TPM3KQ2XH9R
+                      name: Couscous au poulet
+                      available: true
+                      expected: 7
+                      low: 5
+                      high: 9
+                      confidence: high
+                      alreadyOrdered: 1
+                      samples: { sameWeekday: 4, recentDays: 7 }
+                    - menuItemId: item_B2K9QX7MRT4H
+                      name: "Brik à l'oeuf"
+                      available: true
+                      expected: 6
+                      low: 4
+                      high: 8
+                      confidence: high
+                      alreadyOrdered: 2
+                      samples: { sameWeekday: 4, recentDays: 7 }
+                  accuracy:
+                    days:
+                      - { day: '2026-10-31', predicted: 13, actual: 12, absError: 1 }
+                      - { day: '2026-10-30', predicted: 27, actual: 30, absError: 3 }
+                    meanAbsoluteError: 2.4
+                    meanAbsolutePercentError: 9.8
+                  note: null
+                  method: Weighted average of the same weekday over the last 4 weeks (40/30/20/10 %), blended 60/40 with the last 7 service days.
+                  summary: "Expect around 31 dishes on Monday (between 24 and 38). Prepare most of: Couscous au poulet (about 7), Brik à l'oeuf (about 6), Lablabi (about 5)."
+                  summarySource: template
+                  advisory: AI-assisted advice. The restaurant decides what to prepare.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /restaurants/{restaurantId}/delivery-personnel:
+    get:
+      tags: [Restaurant]
+      operationId: listDeliveryPersonnel
+      summary: The restaurant's delivery personnel
+      description: Lists the delivery people the restaurant employs, ordered by name (FR-18, FR-30, BR-06). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      responses:
+        '200':
+          description: Delivery personnel.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deliveryPersonnel]
+                properties:
+                  deliveryPersonnel:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeliveryPerson'
+              example:
+                deliveryPersonnel:
+                  - deliveryPersonId: dlv_7RM2KQ4XTP9H
+                    restaurantId: rst_4H7KQ2M9XPTB
+                    identity: amine.b
+                    fullName: Amine Bouzid
+                    phoneNumber: '+21650200301'
+                    status: ACTIVE
+                  - deliveryPersonId: dlv_5KX2MQ9TRH7P
+                    restaurantId: rst_4H7KQ2M9XPTB
+                    identity: karim.d
+                    fullName: Karim Dridi
+                    phoneNumber: '+21650200300'
+                    status: ACTIVE
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Restaurant]
+      operationId: provisionDeliveryPerson
+      summary: Provision a delivery person account
+      description: Creates a sign-in account for a delivery person the restaurant employs and equips itself (FR-18, FR-30, BR-06, BR-07). STAFF of this restaurant only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RestaurantIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryPersonCreateRequest'
+            example:
+              identity: hatem.k
+              fullName: Hatem Kefi
+              phoneNumber: '+21650200310'
+              password: 'Delivery#2026'
+      responses:
+        '201':
+          description: The created delivery person (no credential returned).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deliveryPerson]
+                properties:
+                  deliveryPerson:
+                    $ref: '#/components/schemas/DeliveryPerson'
+              example:
+                deliveryPerson:
+                  deliveryPersonId: dlv_H9QK4MT2XR7P
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  identity: hatem.k
+                  fullName: Hatem Kefi
+                  phoneNumber: '+21650200310'
+                  status: ACTIVE
+        '400':
+          description: VAL-001 — schema violation or identity already in use (across staff, delivery and admin accounts).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: VAL-001, message: This identity is already in use }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ForbiddenRestaurant'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Organizations
+  /organizations:
+    get:
+      tags: [Organizations]
+      operationId: listOrganizations
+      summary: List organizations
+      description: Lists all workplaces, campuses and institutions, ordered by name (FR-04, D-06). STAFF or ADMIN.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Organizations.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [organizations]
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Organization'
+              example:
+                organizations:
+                  - { organizationId: org_6TQ2MK9XRH4P, name: Ennasr Business Center, type: WORKPLACE, status: ACTIVE }
+                  - { organizationId: org_3RX7K2PQ9MTB, name: Lac 2 Tech Park, type: WORKPLACE, status: ACTIVE }
+                  - { organizationId: org_8KM4QT2XPR7H, name: MUST University, type: CAMPUS, status: ACTIVE }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Organizations]
+      operationId: createOrganization
+      summary: Create an organization
+      description: Creates a workplace, campus or institution; names are unique case-insensitively (FR-04, D-06). STAFF or ADMIN.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreateRequest'
+            example:
+              name: Technopark El Ghazala
+              type: WORKPLACE
+      responses:
+        '201':
+          description: The created organization.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [organization]
+                properties:
+                  organization:
+                    $ref: '#/components/schemas/Organization'
+              example:
+                organization:
+                  organizationId: org_2XP7KM4QTR9H
+                  name: Technopark El Ghazala
+                  type: WORKPLACE
+                  status: ACTIVE
+        '400':
+          description: VAL-001 — schema violation or an organization with this name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: VAL-001, message: This organization already exists }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Delivery
+  /delivery/assignments:
+    get:
+      tags: [Delivery]
+      operationId: listMyAssignments
+      summary: My delivery assignments
+      description: Lists the caller's own assignments — open ones first, then newest assigned first, at most 50 (FR-20, BR-08). DELIVERY only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The caller's assignments.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignments]
+                properties:
+                  assignments:
+                    type: array
+                    maxItems: 50
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+              example:
+                assignments:
+                  - assignmentId: asg_T4KQ9MX2RH7P
+                    orderId: FG-7K2P9Q
+                    status: ASSIGNED
+                    orderStatus: ASSIGNED
+                    orderStatusLabel: Delivery person assigned
+                    customerName: Omar Trabelsi
+                    destination: Lac 2 Tech Park
+                    total: 24.5
+                    paymentMethod: CASH_ON_DELIVERY
+                    paymentStatus: PENDING
+                    assignedAt: '2026-11-02T10:45:12.004Z'
+                    completedAt: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /delivery/assignments/{assignmentId}:
+    get:
+      tags: [Delivery]
+      operationId: getAssignmentDetail
+      summary: One of my assignments
+      description: Returns exactly what is needed to complete this delivery — items, pickup, customer contact and destination, amount to collect (FR-21, BR-08, BR-15; destination representation Q-02). DELIVERY only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssignmentIdPath'
+      responses:
+        '200':
+          description: The assignment detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment]
+                properties:
+                  assignment:
+                    $ref: '#/components/schemas/AssignmentDetail'
+              examples:
+                assigned:
+                  $ref: '#/components/examples/AssignmentAssignedBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /delivery/assignments/{assignmentId}/start:
+    post:
+      tags: [Delivery]
+      operationId: startDelivery
+      summary: Start the delivery
+      description: The assignee starts the delivery; the assignment becomes STARTED and the order OUT_FOR_DELIVERY (UC-02, FR-22, BR-08, BR-10, I-9). DELIVERY only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssignmentIdPath'
+      responses:
+        '200':
+          description: The updated assignment detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment]
+                properties:
+                  assignment:
+                    $ref: '#/components/schemas/AssignmentDetail'
+              examples:
+                started:
+                  $ref: '#/components/examples/AssignmentStartedBody'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: DEL-001 — the delivery has already started (assignment not ASSIGNED) or the order transition is refused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: DEL-001, message: This delivery has already started }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /delivery/assignments/{assignmentId}/confirm:
+    post:
+      tags: [Delivery]
+      operationId: confirmDelivery
+      summary: Confirm the delivery
+      description: The assignee confirms delivery in one transaction T3 — assignment COMPLETED, order DELIVERED, and for cash on delivery the payment is marked PAID only when cashCollected is true (UC-02, UC-03, FR-23, FR-26, BR-11). DELIVERY only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AssignmentIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmDeliveryRequest'
+            example:
+              cashCollected: true
+      responses:
+        '200':
+          description: The completed assignment detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment]
+                properties:
+                  assignment:
+                    $ref: '#/components/schemas/AssignmentDetail'
+              examples:
+                completed:
+                  $ref: '#/components/examples/AssignmentCompletedBody'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: DEL-001 — the delivery was not started (assignment not STARTED) or the order transition is refused (BR-11).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: DEL-001, message: Start the delivery before confirming it }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Admin
+  /admin/restaurants:
+    get:
+      tags: [Admin]
+      operationId: adminListRestaurants
+      summary: List all restaurants
+      description: Lists every restaurant on the platform, ordered by name (UN-24, FR-29, SDD §5.1.5). ADMIN only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: All restaurants (raw records; flags are 0/1 integers).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [restaurants]
+                properties:
+                  restaurants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RestaurantRecord'
+              example:
+                restaurants:
+                  - restaurantId: rst_9PX2KQ7MTR4H
+                    name: Campus Bites
+                    status: ACTIVE
+                    orderingDeadline: '10:30'
+                    accessRules: ORGANIZATION_MEMBERS_ONLY
+                    cashOnDeliveryEnabled: 1
+                    ePaymentEnabled: 1
+                    address: Avenue de la République, Tunis
+                  - restaurantId: rst_4H7KQ2M9XPTB
+                    name: Dar Lella
+                    status: ACTIVE
+                    orderingDeadline: '23:30'
+                    accessRules: ORGANIZATION_MEMBERS_ONLY
+                    cashOnDeliveryEnabled: 1
+                    ePaymentEnabled: 1
+                    address: Rue du Lac Léman, Les Berges du Lac, Tunis
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin]
+      operationId: adminCreateRestaurant
+      summary: Create a restaurant
+      description: Creates an ACTIVE restaurant with both payment methods enabled and an empty published menu (UN-24, FR-29, SDD §3.3, §5.1.5). ADMIN only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantCreateRequest'
+            example:
+              name: Dar Lella
+              orderingDeadline: '23:30'
+              address: Rue du Lac Léman, Les Berges du Lac, Tunis
+      responses:
+        '201':
+          description: The created restaurant (raw record).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [restaurant]
+                properties:
+                  restaurant:
+                    $ref: '#/components/schemas/RestaurantRecord'
+              example:
+                restaurant:
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  name: Dar Lella
+                  status: ACTIVE
+                  orderingDeadline: '23:30'
+                  accessRules: ORGANIZATION_MEMBERS_ONLY
+                  cashOnDeliveryEnabled: 1
+                  ePaymentEnabled: 1
+                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /admin/staff:
+    get:
+      tags: [Admin]
+      operationId: adminListStaff
+      summary: List all restaurant staff accounts
+      description: Lists every staff account with its restaurant, ordered by restaurant then name (FR-29, SDD §5.1.5). ADMIN only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Staff accounts (no credentials).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [staff]
+                properties:
+                  staff:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StaffAccountListItem'
+              example:
+                staff:
+                  - staffId: stf_3QM7KX2TPR9H
+                    restaurantId: rst_9PX2KQ7MTR4H
+                    identity: staff@campusbites.tn
+                    fullName: Mehdi Jaziri
+                    status: ACTIVE
+                    restaurantName: Campus Bites
+                  - staffId: stf_8MZQ4RTK2HXA
+                    restaurantId: rst_4H7KQ2M9XPTB
+                    identity: staff@darlella.tn
+                    fullName: Sonia Gharbi
+                    status: ACTIVE
+                    restaurantName: Dar Lella
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Admin]
+      operationId: adminProvisionStaff
+      summary: Provision a restaurant staff account
+      description: Creates a STAFF account bound to one restaurant; identities are unique across all account types (FR-29, SDD §5.1.5). ADMIN only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreateRequest'
+            example:
+              restaurantId: rst_4H7KQ2M9XPTB
+              identity: staff@darlella.tn
+              fullName: Sonia Gharbi
+              password: 'Staff#2026'
+      responses:
+        '201':
+          description: The created staff account.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [staff]
+                properties:
+                  staff:
+                    $ref: '#/components/schemas/StaffAccount'
+              example:
+                staff:
+                  staffId: stf_8MZQ4RTK2HXA
+                  restaurantId: rst_4H7KQ2M9XPTB
+                  identity: staff@darlella.tn
+                  fullName: Sonia Gharbi
+                  status: ACTIVE
+        '400':
+          description: VAL-001 — schema violation or identity already in use.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: VAL-001, message: This identity is already in use }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: NOT-FOUND — the restaurant does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: NOT-FOUND, message: Restaurant not found }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /admin/monitor:
+    get:
+      tags: [Admin]
+      operationId: adminMonitor
+      summary: Operational monitoring
+      description: Platform counts, today's orders per restaurant by status, and the 30 most recent audit events — read-only (BG-09, UN-24, SDD §5.1.5). ADMIN only.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Monitoring snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monitor'
+              example:
+                serviceDate: '2026-11-02'
+                totals:
+                  restaurants: 2
+                  customers: 15
+                  staff: 2
+                  deliveryPersonnel: 3
+                  ordersTotal: 412
+                restaurants:
+                  - restaurantId: rst_9PX2KQ7MTR4H
+                    name: Campus Bites
+                    today: {}
+                  - restaurantId: rst_4H7KQ2M9XPTB
+                    name: Dar Lella
+                    today: { SUBMITTED: 4, IN_PREPARATION: 2, ASSIGNED: 1 }
+                recentEvents:
+                  - auditId: 1873
+                    at: '2026-11-02T10:45:12.004Z'
+                    actorRole: STAFF
+                    actorId: stf_8MZQ4RTK2HXA
+                    restaurantId: rst_4H7KQ2M9XPTB
+                    action: DELIVERY_ASSIGNED
+                    entity: delivery_assignment
+                    entityId: asg_T4KQ9MX2RH7P
+                    detail: '{"orderId":"FG-7K2P9Q","deliveryPersonId":"dlv_5KX2MQ9TRH7P"}'
+                  - auditId: 1872
+                    at: '2026-11-02T08:14:03.512Z'
+                    actorRole: CUSTOMER
+                    actorId: cus_9QW4T7KPMX2H
+                    restaurantId: rst_4H7KQ2M9XPTB
+                    action: ORDER_SUBMITTED
+                    entity: orders
+                    entityId: FG-7K2P9Q
+                    detail: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ---------------------------------------------------------------- Events
+  /events:
+    get:
+      tags: [Events]
+      operationId: streamEvents
+      summary: Live order status stream (Server-Sent Events)
+      description: Long-lived SSE stream of order events the caller may see — customers their own orders, staff their own restaurant, delivery people their own assignments; admins get none (FR-24, E-01–E-05, BR-15, D-08). CUSTOMER, STAFF or DELIVERY.
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          description: |
+            An open `text/event-stream` (`Cache-Control: no-cache`). The stream starts with
+            `retry: 3000`, sends a `: ping` comment every 25 s, and emits events only after the
+            underlying transaction has committed (D-08). Each event is
+
+            ```
+            event: <type>
+            data: {"type":"<type>","orderId":"FG-7K2P9Q","status":"<order status>","at":"<ISO-8601>"}
+            ```
+
+            The payload is deliberately minimal (`type`, `orderId`, `status`, `at`); clients
+            fetch details through the REST endpoints.
+
+            | `type` | Raised when | `status` carried | Visible to |
+            |---|---|---|---|
+            | `OrderSubmitted` (E-01) | order created | `SUBMITTED` | customer, staff |
+            | `OrderConfirmed` (E-02) | order confirmed (right after submission) | `SUBMITTED` | customer, staff |
+            | `DeliveryAssigned` (E-03) | staff assigned a delivery person | `ASSIGNED` | customer, staff, assignee |
+            | `DeliveryStatusChanged` (E-04) | delivery started / confirmed | `OUT_FOR_DELIVERY` or `DELIVERED` | customer, staff, assignee |
+            | `PaymentStatusChanged` (E-05) | cash marked collected at delivery | `DELIVERED` (order status) | customer, staff, assignee |
+            | `OrderStatusChanged` | any order status change | new order status | customer, staff; assignee only for changes made through delivery management (`ASSIGNED`, `OUT_FOR_DELIVERY`, `DELIVERED`) |
+
+            When the client disconnects the subscription is released.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE frames; each `data:` line is a JSON-encoded `OrderEvent`.
+              example: |
+                retry: 3000
+
+                event: OrderStatusChanged
+                data: {"type":"OrderStatusChanged","orderId":"FG-7K2P9Q","status":"IN_PREPARATION","at":"2026-11-02T10:31:07.221Z"}
+
+                : ping
+
+                event: DeliveryAssigned
+                data: {"type":"DeliveryAssigned","orderId":"FG-7K2P9Q","status":"ASSIGNED","at":"2026-11-02T10:45:12.010Z"}
+
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: AUTH-002 — the caller's role (ADMIN) may not subscribe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: { code: AUTH-002, message: Authorization denied }
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+# =====================================================================
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Session token returned by `/auth/signin` or `/auth/otp/verify`, sent as `Authorization Bearer <token>`. Takes precedence over the cookie.
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: fg_session
+      description: HttpOnly, SameSite=Lax session cookie set by sign-in (12 h; Secure in production).
+
+  headers:
+    SetSessionCookie:
+      description: Sets the session cookie (HttpOnly, SameSite=Lax, Path=/, 12 hours; `Secure` in production).
+      schema:
+        type: string
+        example: 'fg_session=3q2-7wEXAMPLEtokenBase64Url_Hq9vK1mZ0aL4sT8uYcR2dN6; Max-Age=43200; Path=/; HttpOnly; SameSite=Lax'
+
+  parameters:
+    RestaurantIdPath:
+      name: restaurantId
+      in: path
+      required: true
+      description: Restaurant id. In staff paths it must equal the caller's own restaurant, else `403 AUTH-002`.
+      schema:
+        type: string
+      example: rst_4H7KQ2M9XPTB
+    OrderIdPath:
+      name: orderId
+      in: path
+      required: true
+      description: Customer-facing order number (FR-14).
+      schema:
+        type: string
+        pattern: '^FG-[2-9A-HJKMNP-Z]{6}$'
+      example: FG-7K2P9Q
+    MenuItemIdPath:
+      name: menuItemId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: item_7TPM3KQ2XH9R
+    CustomerIdPath:
+      name: customerId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: cus_9QW4T7KPMX2H
+    AssignmentIdPath:
+      name: assignmentId
+      in: path
+      required: true
+      description: Assignment id; must belong to the calling delivery person, else `404`.
+      schema:
+        type: string
+      example: asg_T4KQ9MX2RH7P
+
+  responses:
+    BadRequest:
+      description: VAL-001 — invalid input (schema violation, malformed JSON or business validation). Only the first issue is reported.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: VAL-001, message: 'name: Too small: expected string to have >=2 characters' }
+    Unauthorized:
+      description: AUTH-001 — not signed in (no, unknown or expired session token).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: AUTH-001, message: Sign in required }
+    Forbidden:
+      description: AUTH-002 — the caller's role may not use this operation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: AUTH-002, message: Authorization denied }
+    ForbiddenRestaurant:
+      description: AUTH-002 — caller is not STAFF, or the path `restaurantId` is not the caller's own restaurant.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            otherRestaurant:
+              value:
+                error: { code: AUTH-002, message: You can only act on your own restaurant }
+            wrongRole:
+              value:
+                error: { code: AUTH-002, message: Authorization denied }
+    NotFound:
+      description: NOT-FOUND — the resource does not exist within the caller's scope.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: NOT-FOUND, message: Order not found }
+    OrderConflict:
+      description: ORDER-001 — today's ordering deadline has passed (BR-01; a request at or after the deadline instant is refused), or ORDER-002 — a requested item is currently unavailable (BR-02).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            deadline:
+              summary: ORDER-001
+              value:
+                error: { code: ORDER-001, message: 'Ordering for today closed at 10:30' }
+            unavailable:
+              summary: ORDER-002
+              value:
+                error: { code: ORDER-002, message: Couscous au poulet is currently unavailable }
+    DeliveryConflict:
+      description: DEL-001 — delivery operation refused (person not employed by / not active at this restaurant, order already assigned, or status transition not allowed).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            notYourCourier:
+              value:
+                error: { code: DEL-001, message: This delivery person does not work for your restaurant }
+            alreadyAssigned:
+              value:
+                error: { code: DEL-001, message: This order is already assigned }
+            transition:
+              value:
+                error: { code: DEL-001, message: An order cannot go from DELIVERED to ASSIGNED }
+    OrderCreationFailed:
+      description: ORDER-003 — the restaurant is not taking orders (not ACTIVE).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: ORDER-003, message: Restaurant is not taking orders }
+    PaymentFailed:
+      description: PAY-001 — e-payment capture declined; the whole order is rolled back (BR-13).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: PAY-001, message: The payment was declined by the provider (sandbox) }
+    PaymentUnavailable:
+      description: PAY-002 — the e-payment provider is unavailable; nothing was created.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: PAY-002, message: Payment provider unavailable }
+    TooManyRequests:
+      description: Rate limit on `/auth/*` exceeded (200 requests per 15 minutes per client). Note the body uses code AUTH-001 with HTTP 429. IETF draft-7 `RateLimit` / `RateLimit-Policy` headers are sent on every `/auth` response.
+      headers:
+        RateLimit:
+          schema:
+            type: string
+            example: 'limit=200, remaining=0, reset=742'
+        RateLimit-Policy:
+          schema:
+            type: string
+            example: '200;w=900'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: AUTH-001, message: Too many attempts, try again later }
+    InternalError:
+      description: SYS-001 — unexpected server error (no stack trace or SQL is returned).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: { code: SYS-001, message: Internal system error }
+
+  schemas:
+
+    # ------------------------------------------------------------ common
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [AUTH-001, AUTH-002, VAL-001, ORDER-001, ORDER-002, ORDER-003, PAY-001, PAY-002, DEL-001, NOT-FOUND, SYS-001]
+            message:
+              type: string
+              description: Safe, user-facing detail.
+      example:
+        error: { code: VAL-001, message: 'items: an order needs at least one item' }
+
+    Role:
+      type: string
+      enum: [CUSTOMER, STAFF, DELIVERY, ADMIN]
+
+    MoneyTnd:
+      type: number
+      description: Amount in Tunisian dinars (TND) with at most 3 decimals (millime precision). Not expressed as `multipleOf` to avoid floating-point false negatives in validators; use the matching `*Millimes` integer where exactness matters.
+      example: 24.5
+
+    Millimes:
+      type: integer
+      description: Exact amount in millimes (1 TND = 1000 millimes).
+      example: 24500
+
+    Timestamp:
+      type: string
+      format: date-time
+      description: ISO-8601 UTC timestamp.
+      example: '2026-11-02T08:14:03.512Z'
+
+    ServiceDate:
+      type: string
+      format: date
+      description: Restaurant-local service day (Africa/Tunis), YYYY-MM-DD.
+      example: '2026-11-02'
+
+    Hhmm:
+      type: string
+      pattern: '^([01]\d|2[0-3]):([0-5]\d)$'
+      description: Restaurant-local wall-clock time, HH:MM (24 h).
+      example: '10:30'
+
+    TunisianPhone:
+      type: string
+      pattern: '^\+216\d{8}$'
+      description: Tunisian phone number in E.164 form, +216 followed by 8 digits (trimmed).
+      example: '+21698333444'
+
+    PaymentMethod:
+      type: string
+      enum: [CASH_ON_DELIVERY, E_PAYMENT]
+
+    PaymentStatus:
+      type: string
+      enum: [PENDING, PAID]
+      description: Cash on delivery stays PENDING until cash is recorded at delivery; e-payment is PAID at checkout.
+
+    OrderStatus:
+      type: string
+      enum: [SUBMITTED, IN_PREPARATION, ASSIGNED, OUT_FOR_DELIVERY, DELIVERED]
+      description: |
+        Happy-path lifecycle (PROPOSED, D-05):
+        SUBMITTED -> IN_PREPARATION -> ASSIGNED -> OUT_FOR_DELIVERY -> DELIVERED,
+        and a restaurant may assign straight from SUBMITTED. Cancelled/failed states are unresolved and absent.
+
+    OrderStatusLabel:
+      type: string
+      enum: [Order received, Being prepared, Delivery person assigned, On the way, Delivered]
+
+    AssignmentStatus:
+      type: string
+      enum: [ASSIGNED, STARTED, COMPLETED]
+
+    OrganizationType:
+      type: string
+      enum: [WORKPLACE, CAMPUS, INSTITUTION]
+
+    # ------------------------------------------------------------ meta / auth
+    Meta:
+      type: object
+      required: [name, version, demoMode]
+      properties:
+        name:
+          type: string
+          example: FoodGO
+        version:
+          type: string
+          example: 0.1.0
+        demoMode:
+          type: boolean
+          description: When true, `/auth/otp/request` echoes the code as `demoCode`.
+
+    SignInRequest:
+      type: object
+      required: [role, identity, password]
+      properties:
+        role:
+          type: string
+          enum: [STAFF, DELIVERY, ADMIN]
+        identity:
+          type: string
+          minLength: 3
+          maxLength: 120
+          description: Login identity (e-mail or user name), trimmed.
+        password:
+          type: string
+          format: password
+          minLength: 1
+          maxLength: 128
+
+    OtpRequest:
+      type: object
+      required: [phoneNumber]
+      properties:
+        phoneNumber:
+          $ref: '#/components/schemas/TunisianPhone'
+
+    OtpChallenge:
+      type: object
+      required: [challengeId, expiresInSeconds]
+      properties:
+        challengeId:
+          type: string
+          example: otp_K7M2QX9RT4HB
+        expiresInSeconds:
+          type: integer
+          example: 300
+        demoCode:
+          type: string
+          pattern: '^\d{6}$'
+          description: The code itself — present only in demo mode.
+
+    OtpVerifyRequest:
+      type: object
+      required: [challengeId, code]
+      properties:
+        challengeId:
+          type: string
+          minLength: 5
+        code:
+          type: string
+          pattern: '^\d{6}$'
+          description: The 6-digit code received by SMS.
+
+    Session:
+      type: object
+      description: The signed-in principal.
+      required: [role, subjectId, restaurantId]
+      properties:
+        role:
+          $ref: '#/components/schemas/Role'
+        subjectId:
+          type: string
+          description: Id of the account (staffId, deliveryPersonId, adminId or customerId).
+          example: stf_8MZQ4RTK2HXA
+        restaurantId:
+          type: string
+          nullable: true
+          description: The bound restaurant for STAFF and DELIVERY; null for CUSTOMER and ADMIN.
+          example: rst_4H7KQ2M9XPTB
+        fullName:
+          type: string
+          example: Sonia Gharbi
+
+    SessionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Session'
+        - type: object
+          required: [restaurantName]
+          properties:
+            restaurantName:
+              type: string
+              nullable: true
+              example: Dar Lella
+
+    SignInResponse:
+      type: object
+      required: [token, session]
+      properties:
+        token:
+          type: string
+          description: Opaque session token (base64url). Use as Bearer token; also set as the fg_session cookie.
+        session:
+          $ref: '#/components/schemas/Session'
+
+    # ------------------------------------------------------------ menu / restaurant
+    MenuItem:
+      type: object
+      required: [menuItemId, name, description, price, priceMillimes, available]
+      properties:
+        menuItemId:
+          type: string
+          example: item_7TPM3KQ2XH9R
+        name:
+          type: string
+          example: Couscous au poulet
+        description:
+          type: string
+          example: Friday classic, with vegetables and chickpeas
+        price:
+          $ref: '#/components/schemas/MoneyTnd'
+        priceMillimes:
+          $ref: '#/components/schemas/Millimes'
+        available:
+          type: boolean
+
+    MenuItemCreateRequest:
+      type: object
+      required: [name, price]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+          description: Trimmed.
+        description:
+          type: string
+          maxLength: 240
+          default: ''
+          description: Trimmed.
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 1000
+          description: Price in TND; stored rounded to the nearest millime.
+        available:
+          type: boolean
+          default: true
+
+    MenuItemPatchRequest:
+      type: object
+      minProperties: 1
+      description: At least one of the fields is required.
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        description:
+          type: string
+          maxLength: 240
+        price:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 1000
+        available:
+          type: boolean
+
+    RestaurantSettings:
+      type: object
+      required: [restaurantId, name, address, orderingDeadline, cashOnDeliveryEnabled, ePaymentEnabled, paymentMethods]
+      properties:
+        restaurantId:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+          nullable: true
+        orderingDeadline:
+          $ref: '#/components/schemas/Hhmm'
+        cashOnDeliveryEnabled:
+          type: boolean
+        ePaymentEnabled:
+          type: boolean
+        paymentMethods:
+          type: array
+          description: Enabled methods, derived from the two flags.
+          items:
+            $ref: '#/components/schemas/PaymentMethod'
+
+    SettingsUpdateRequest:
+      type: object
+      required: [orderingDeadline, cashOnDeliveryEnabled, ePaymentEnabled]
+      description: Full replacement. At least one payment method must be true (BR-12), checked after schema validation.
+      properties:
+        orderingDeadline:
+          $ref: '#/components/schemas/Hhmm'
+        cashOnDeliveryEnabled:
+          type: boolean
+        ePaymentEnabled:
+          type: boolean
+
+    RestaurantRecord:
+      type: object
+      description: Raw restaurant record as returned by the admin interface (flags are 0/1 integers).
+      required: [restaurantId, name, status, orderingDeadline, accessRules, cashOnDeliveryEnabled, ePaymentEnabled, address]
+      properties:
+        restaurantId:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          example: ACTIVE
+        orderingDeadline:
+          $ref: '#/components/schemas/Hhmm'
+        accessRules:
+          type: string
+          example: ORGANIZATION_MEMBERS_ONLY
+        cashOnDeliveryEnabled:
+          type: integer
+          enum: [0, 1]
+        ePaymentEnabled:
+          type: integer
+          enum: [0, 1]
+        address:
+          type: string
+          nullable: true
+
+    RestaurantCreateRequest:
+      type: object
+      required: [name, orderingDeadline]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+          description: Trimmed.
+        orderingDeadline:
+          $ref: '#/components/schemas/Hhmm'
+        address:
+          type: string
+          maxLength: 200
+          description: Trimmed.
+
+    DeadlineInfo:
+      type: object
+      required: [orderingDeadline, orderingOpen, minutesLeft, serviceDate]
+      properties:
+        orderingDeadline:
+          $ref: '#/components/schemas/Hhmm'
+        orderingOpen:
+          type: boolean
+          description: True while now is strictly before today's deadline.
+        minutesLeft:
+          type: integer
+          minimum: 0
+          description: Whole minutes until the deadline; 0 when closed.
+        serviceDate:
+          $ref: '#/components/schemas/ServiceDate'
+
+    CustomerRestaurant:
+      allOf:
+        - type: object
+          required: [restaurantId, name, address, paymentMethods]
+          properties:
+            restaurantId:
+              type: string
+            name:
+              type: string
+            address:
+              type: string
+              nullable: true
+            paymentMethods:
+              type: array
+              items:
+                $ref: '#/components/schemas/PaymentMethod'
+        - $ref: '#/components/schemas/DeadlineInfo'
+
+    CustomerMenu:
+      type: object
+      required: [restaurant, items]
+      properties:
+        restaurant:
+          $ref: '#/components/schemas/CustomerRestaurant'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItem'
+
+    # ------------------------------------------------------------ customers / organizations
+    Organization:
+      type: object
+      required: [organizationId, name, type, status]
+      properties:
+        organizationId:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/OrganizationType'
+        status:
+          type: string
+          example: ACTIVE
+
+    OrganizationCreateRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+          description: Trimmed; unique case-insensitively.
+        type:
+          $ref: '#/components/schemas/OrganizationType'
+
+    CustomerProfile:
+      type: object
+      required: [customerId, fullName, phoneNumber, organization]
+      properties:
+        customerId:
+          type: string
+        fullName:
+          type: string
+        phoneNumber:
+          $ref: '#/components/schemas/TunisianPhone'
+        organization:
+          type: object
+          required: [organizationId, name, type]
+          properties:
+            organizationId:
+              type: string
+            name:
+              type: string
+            type:
+              $ref: '#/components/schemas/OrganizationType'
+
+    MembershipStatus:
+      type: string
+      enum: [ACTIVE, SUSPENDED]
+
+    RestaurantCustomerSummary:
+      type: object
+      required: [customerId, fullName, phoneNumber, organizationName, eligible, status, registeredAt]
+      properties:
+        customerId:
+          type: string
+        fullName:
+          type: string
+        phoneNumber:
+          $ref: '#/components/schemas/TunisianPhone'
+        organizationName:
+          type: string
+        eligible:
+          type: boolean
+          description: This restaurant's eligibility decision (BR-04).
+        status:
+          $ref: '#/components/schemas/MembershipStatus'
+        registeredAt:
+          $ref: '#/components/schemas/Timestamp'
+
+    RestaurantCustomerDetail:
+      allOf:
+        - $ref: '#/components/schemas/RestaurantCustomerSummary'
+        - type: object
+          required: [organizationId, organizationType]
+          properties:
+            organizationId:
+              type: string
+            organizationType:
+              $ref: '#/components/schemas/OrganizationType'
+
+    RegisteredCustomer:
+      allOf:
+        - $ref: '#/components/schemas/RestaurantCustomerDetail'
+        - type: object
+          required: [existingPerson]
+          properties:
+            existingPerson:
+              type: boolean
+              description: True when the phone number already belonged to a customer; only a membership was added (D-01).
+
+    RegisterCustomerRequest:
+      type: object
+      required: [fullName, phoneNumber, organizationId, identityVerified]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 80
+          description: Trimmed. Ignored if the phone number already belongs to a customer.
+        phoneNumber:
+          $ref: '#/components/schemas/TunisianPhone'
+        organizationId:
+          type: string
+          minLength: 3
+        eligible:
+          type: boolean
+          default: true
+        identityVerified:
+          type: boolean
+          enum: [true]
+          description: Must be `true` — identity must be verified in person before registration (BR-05).
+
+    CustomerPatchRequest:
+      type: object
+      minProperties: 1
+      description: At least one of the fields is required.
+      properties:
+        eligible:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/MembershipStatus'
+
+    # ------------------------------------------------------------ accounts
+    StaffAccount:
+      type: object
+      required: [staffId, restaurantId, identity, fullName, status]
+      properties:
+        staffId:
+          type: string
+        restaurantId:
+          type: string
+        identity:
+          type: string
+        fullName:
+          type: string
+        status:
+          type: string
+          example: ACTIVE
+
+    StaffAccountListItem:
+      allOf:
+        - $ref: '#/components/schemas/StaffAccount'
+        - type: object
+          required: [restaurantName]
+          properties:
+            restaurantName:
+              type: string
+
+    StaffCreateRequest:
+      type: object
+      required: [restaurantId, identity, fullName, password]
+      properties:
+        restaurantId:
+          type: string
+          minLength: 3
+        identity:
+          type: string
+          minLength: 3
+          maxLength: 120
+          description: Trimmed; unique across staff, delivery and admin accounts.
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 80
+          description: Trimmed.
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
+    DeliveryPerson:
+      type: object
+      required: [deliveryPersonId, restaurantId, identity, fullName, phoneNumber, status]
+      properties:
+        deliveryPersonId:
+          type: string
+        restaurantId:
+          type: string
+        identity:
+          type: string
+        fullName:
+          type: string
+        phoneNumber:
+          type: string
+          nullable: true
+        status:
+          type: string
+          example: ACTIVE
+
+    DeliveryPersonCreateRequest:
+      type: object
+      required: [identity, fullName, password]
+      properties:
+        identity:
+          type: string
+          minLength: 3
+          maxLength: 120
+          description: Trimmed; unique across staff, delivery and admin accounts.
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 80
+          description: Trimmed.
+        phoneNumber:
+          $ref: '#/components/schemas/TunisianPhone'
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
+    # ------------------------------------------------------------ orders
+    SubmitOrderRequest:
+      type: object
+      required: [restaurantId, items, paymentMethod]
+      properties:
+        restaurantId:
+          type: string
+          minLength: 3
+        items:
+          type: array
+          minItems: 1
+          maxItems: 30
+          description: Lines with the same menuItemId are merged; the merged quantity may not exceed 50.
+          items:
+            type: object
+            required: [menuItemId, quantity]
+            properties:
+              menuItemId:
+                type: string
+                minLength: 3
+              quantity:
+                type: integer
+                minimum: 1
+                maximum: 50
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+
+    SubmitOrderResponse:
+      type: object
+      required: [order, confirmation]
+      properties:
+        order:
+          $ref: '#/components/schemas/Order'
+        confirmation:
+          type: string
+          example: Order FG-7K2P9Q confirmed
+
+    OrderItem:
+      type: object
+      required: [menuItemId, name, quantity, unitPrice, lineTotal]
+      properties:
+        menuItemId:
+          type: string
+        name:
+          type: string
+          description: Name snapshot taken at order time (D-02).
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 50
+        unitPrice:
+          allOf:
+            - $ref: '#/components/schemas/MoneyTnd'
+          description: Unit price snapshot at order time (D-02).
+        lineTotal:
+          allOf:
+            - $ref: '#/components/schemas/MoneyTnd'
+          description: quantity x unitPrice (derived, not stored).
+
+    OrderDelivery:
+      type: object
+      description: Delivery progress of an order.
+      required: [assignmentId, status, deliveryPersonName, assignedAt, startedAt, completedAt]
+      properties:
+        assignmentId:
+          type: string
+        status:
+          $ref: '#/components/schemas/AssignmentStatus'
+        deliveryPersonName:
+          type: string
+        assignedAt:
+          $ref: '#/components/schemas/Timestamp'
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Order:
+      type: object
+      required: [orderId, restaurantId, status, statusLabel, total, totalMillimes, paymentMethod, paymentStatus, createdAt, serviceDate, deadlineSnapshot, items, delivery]
+      properties:
+        orderId:
+          type: string
+          pattern: '^FG-[2-9A-HJKMNP-Z]{6}$'
+          description: Customer-facing order number, readable over the phone (FR-14).
+          example: FG-7K2P9Q
+        restaurantId:
+          type: string
+        restaurantName:
+          type: string
+          description: Present in customer views; absent in restaurant-queue views.
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        statusLabel:
+          $ref: '#/components/schemas/OrderStatusLabel'
+        total:
+          $ref: '#/components/schemas/MoneyTnd'
+        totalMillimes:
+          $ref: '#/components/schemas/Millimes'
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+        paymentStatus:
+          $ref: '#/components/schemas/PaymentStatus'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        serviceDate:
+          $ref: '#/components/schemas/ServiceDate'
+        deadlineSnapshot:
+          allOf:
+            - $ref: '#/components/schemas/Timestamp'
+          description: The ordering deadline instant in force when the order was placed (D-04).
+        items:
+          type: array
+          description: Ordered by item name.
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        delivery:
+          nullable: true
+          description: Null until the order is assigned.
+          allOf:
+            - $ref: '#/components/schemas/OrderDelivery'
+
+    RestaurantOrder:
+      description: An order as seen in the restaurant queue, with what staff need to verify the customer (FR-16).
+      allOf:
+        - $ref: '#/components/schemas/Order'
+        - type: object
+          required: [customer, allowedNext]
+          properties:
+            customer:
+              type: object
+              required: [customerId, fullName, phoneNumber, organizationName, eligible]
+              properties:
+                customerId:
+                  type: string
+                fullName:
+                  type: string
+                phoneNumber:
+                  $ref: '#/components/schemas/TunisianPhone'
+                organizationName:
+                  type: string
+                eligible:
+                  type: boolean
+            allowedNext:
+              type: array
+              description: Statuses the order may move to next (guards still apply).
+              items:
+                $ref: '#/components/schemas/OrderStatus'
+
+    AssignRequest:
+      type: object
+      required: [deliveryPersonId]
+      properties:
+        deliveryPersonId:
+          type: string
+          minLength: 3
+          description: Must be an ACTIVE delivery person of this restaurant (I-8).
+
+    # ------------------------------------------------------------ delivery
+    Assignment:
+      type: object
+      description: One row of a delivery person's assignment list.
+      required: [assignmentId, orderId, status, orderStatus, orderStatusLabel, customerName, destination, total, paymentMethod, paymentStatus, assignedAt, completedAt]
+      properties:
+        assignmentId:
+          type: string
+        orderId:
+          type: string
+        status:
+          $ref: '#/components/schemas/AssignmentStatus'
+        orderStatus:
+          $ref: '#/components/schemas/OrderStatus'
+        orderStatusLabel:
+          $ref: '#/components/schemas/OrderStatusLabel'
+        customerName:
+          type: string
+        destination:
+          type: string
+          description: The customer's registered organization (PROPOSED, Q-02).
+        total:
+          $ref: '#/components/schemas/MoneyTnd'
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+        paymentStatus:
+          $ref: '#/components/schemas/PaymentStatus'
+        assignedAt:
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    AssignmentDetail:
+      type: object
+      description: Exactly the information needed to complete one delivery (FR-21, BR-15).
+      required: [assignmentId, status, assignedAt, startedAt, completedAt, order, pickup, customer, payment]
+      properties:
+        assignmentId:
+          type: string
+        status:
+          $ref: '#/components/schemas/AssignmentStatus'
+        assignedAt:
+          $ref: '#/components/schemas/Timestamp'
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        order:
+          type: object
+          required: [orderId, status, statusLabel, items, total]
+          properties:
+            orderId:
+              type: string
+            status:
+              $ref: '#/components/schemas/OrderStatus'
+            statusLabel:
+              $ref: '#/components/schemas/OrderStatusLabel'
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+            total:
+              $ref: '#/components/schemas/MoneyTnd'
+        pickup:
+          type: object
+          required: [restaurantName, address]
+          properties:
+            restaurantName:
+              type: string
+            address:
+              type: string
+              nullable: true
+        customer:
+          type: object
+          required: [fullName, phoneNumber, destination]
+          properties:
+            fullName:
+              type: string
+            phoneNumber:
+              $ref: '#/components/schemas/TunisianPhone'
+            destination:
+              type: string
+              description: The customer's registered workplace or campus (PROPOSED, Q-02).
+        payment:
+          type: object
+          required: [method, status, amountToCollect]
+          properties:
+            method:
+              $ref: '#/components/schemas/PaymentMethod'
+            status:
+              $ref: '#/components/schemas/PaymentStatus'
+            amountToCollect:
+              allOf:
+                - $ref: '#/components/schemas/MoneyTnd'
+              description: Order total for unpaid cash-on-delivery orders, otherwise 0.
+
+    ConfirmDeliveryRequest:
+      type: object
+      description: Optional body. Only `cashCollected` = true marks a cash-on-delivery payment PAID; omitted or false leaves it PENDING. Ignored for e-payment.
+      properties:
+        cashCollected:
+          type: boolean
+
+    # ------------------------------------------------------------ forecast
+    ForecastDish:
+      type: object
+      required: [menuItemId, name, available, expected, low, high, confidence, alreadyOrdered, samples]
+      properties:
+        menuItemId:
+          type: string
+        name:
+          type: string
+        available:
+          type: boolean
+        expected:
+          type: integer
+          minimum: 0
+          description: Expected number of portions.
+        low:
+          type: integer
+          minimum: 0
+        high:
+          type: integer
+          minimum: 0
+        confidence:
+          type: string
+          enum: [low, medium, high]
+          description: high = 4 same-weekday samples, medium = 2–3, low = fewer.
+        alreadyOrdered:
+          type: integer
+          minimum: 0
+          description: Portions already pre-ordered for the service date.
+        samples:
+          type: object
+          required: [sameWeekday, recentDays]
+          properties:
+            sameWeekday:
+              type: integer
+              minimum: 0
+              maximum: 4
+            recentDays:
+              type: integer
+              minimum: 0
+              maximum: 7
+
+    ForecastAccuracy:
+      type: object
+      description: Backtest over the last 7 service days (only when at least 10 days of history exist).
+      required: [days, meanAbsoluteError, meanAbsolutePercentError]
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            required: [day, predicted, actual, absError]
+            properties:
+              day:
+                $ref: '#/components/schemas/ServiceDate'
+              predicted:
+                type: integer
+              actual:
+                type: integer
+              absError:
+                type: integer
+        meanAbsoluteError:
+          type: number
+          description: One decimal.
+        meanAbsolutePercentError:
+          type: number
+          nullable: true
+          description: One decimal; null when nothing was sold.
+
+    Forecast:
+      type: object
+      description: Advisory demand forecast (FR-31 PROPOSED). Never changes any order, payment, eligibility or menu item.
+      required: [restaurantName, serviceDate, weekday, historyDays, totals, dishes, accuracy, note, method, summary, summarySource, advisory]
+      properties:
+        restaurantName:
+          type: string
+        serviceDate:
+          allOf:
+            - $ref: '#/components/schemas/ServiceDate'
+          description: Next day the kitchen prepares for (today if ordering is still open, otherwise the next usual opening day).
+        weekday:
+          type: string
+          enum: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+        historyDays:
+          type: integer
+          minimum: 0
+          description: Service days with sales in the 35-day history window.
+        totals:
+          type: object
+          required: [expected, low, high, alreadyOrdered]
+          properties:
+            expected:
+              type: integer
+            low:
+              type: integer
+            high:
+              type: integer
+            alreadyOrdered:
+              type: integer
+        dishes:
+          type: array
+          description: Sorted by expected, descending.
+          items:
+            $ref: '#/components/schemas/ForecastDish'
+        accuracy:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ForecastAccuracy'
+        note:
+          type: string
+          nullable: true
+          description: Explains when the forecast skipped to the next usual opening day.
+        method:
+          type: string
+        summary:
+          type: string
+          description: Plain-language prep advice (LLM or template).
+        summarySource:
+          type: string
+          description: '`template`, or `claude (<model>)` when the LLM produced the summary.'
+          example: template
+        advisory:
+          type: string
+          example: AI-assisted advice. The restaurant decides what to prepare.
+
+    # ------------------------------------------------------------ admin
+    AuditEvent:
+      type: object
+      required: [auditId, at, actorRole, actorId, restaurantId, action, entity, entityId, detail]
+      properties:
+        auditId:
+          type: integer
+        at:
+          $ref: '#/components/schemas/Timestamp'
+        actorRole:
+          type: string
+        actorId:
+          type: string
+        restaurantId:
+          type: string
+          nullable: true
+        action:
+          type: string
+          example: ORDER_SUBMITTED
+        entity:
+          type: string
+          nullable: true
+        entityId:
+          type: string
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+          description: JSON-encoded details, if any.
+
+    Monitor:
+      type: object
+      required: [serviceDate, totals, restaurants, recentEvents]
+      properties:
+        serviceDate:
+          $ref: '#/components/schemas/ServiceDate'
+        totals:
+          type: object
+          required: [restaurants, customers, staff, deliveryPersonnel, ordersTotal]
+          properties:
+            restaurants:
+              type: integer
+            customers:
+              type: integer
+            staff:
+              type: integer
+            deliveryPersonnel:
+              type: integer
+            ordersTotal:
+              type: integer
+        restaurants:
+          type: array
+          items:
+            type: object
+            required: [restaurantId, name, today]
+            properties:
+              restaurantId:
+                type: string
+              name:
+                type: string
+              today:
+                type: object
+                description: Count of today's orders per order status; statuses with no orders are omitted.
+                additionalProperties:
+                  type: integer
+        recentEvents:
+          type: array
+          maxItems: 30
+          description: Most recent audit events first.
+          items:
+            $ref: '#/components/schemas/AuditEvent'
+
+    # ------------------------------------------------------------ events
+    OrderEvent:
+      type: object
+      description: Minimal payload of each SSE `data:` line on `GET /events`.
+      required: [type, orderId, status, at]
+      properties:
+        type:
+          type: string
+          enum: [OrderSubmitted, OrderConfirmed, DeliveryAssigned, DeliveryStatusChanged, PaymentStatusChanged, OrderStatusChanged]
+        orderId:
+          type: string
+          example: FG-7K2P9Q
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        at:
+          $ref: '#/components/schemas/Timestamp'
+
+  # ------------------------------------------------------------ shared examples
+  # Whole response bodies, referenced from media types with `examples: {name: {$ref}}`.
+  examples:
+    SubmitOrderBody:
+      summary: Omar's pre-order at Dar Lella (cash on delivery)
+      value:
+        order:
+          orderId: FG-7K2P9Q
+          restaurantId: rst_4H7KQ2M9XPTB
+          restaurantName: Dar Lella
+          status: SUBMITTED
+          statusLabel: Order received
+          total: 24.5
+          totalMillimes: 24500
+          paymentMethod: CASH_ON_DELIVERY
+          paymentStatus: PENDING
+          createdAt: '2026-11-02T08:14:03.512Z'
+          serviceDate: '2026-11-02'
+          deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+          items:
+            - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+            - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+            - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+          delivery: null
+        confirmation: Order FG-7K2P9Q confirmed
+
+    MyOrdersBody:
+      summary: Omar's orders, newest first
+      value:
+        orders:
+          - orderId: FG-7K2P9Q
+            restaurantId: rst_4H7KQ2M9XPTB
+            restaurantName: Dar Lella
+            status: SUBMITTED
+            statusLabel: Order received
+            total: 24.5
+            totalMillimes: 24500
+            paymentMethod: CASH_ON_DELIVERY
+            paymentStatus: PENDING
+            createdAt: '2026-11-02T08:14:03.512Z'
+            serviceDate: '2026-11-02'
+            deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+            items:
+              - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+              - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+              - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+            delivery: null
+          - orderId: FG-3HQ8MX
+            restaurantId: rst_4H7KQ2M9XPTB
+            restaurantName: Dar Lella
+            status: DELIVERED
+            statusLabel: Delivered
+            total: 17.5
+            totalMillimes: 17500
+            paymentMethod: E_PAYMENT
+            paymentStatus: PAID
+            createdAt: '2026-10-31T07:42:00.000Z'
+            serviceDate: '2026-10-31'
+            deadlineSnapshot: '2026-10-31T09:30:00.000Z'
+            items:
+              - { menuItemId: item_K3XQ7MT9RP2H, name: Ojja merguez, quantity: 1, unitPrice: 11, lineTotal: 11 }
+              - { menuItemId: item_P7MK2QX4TR9H, name: Lablabi, quantity: 1, unitPrice: 6.5, lineTotal: 6.5 }
+            delivery:
+              assignmentId: asg_R2XK7QM4PT9H
+              status: COMPLETED
+              deliveryPersonName: Karim Dridi
+              assignedAt: '2026-10-31T11:24:00.000Z'
+              startedAt: '2026-10-31T11:24:00.000Z'
+              completedAt: '2026-10-31T11:24:00.000Z'
+
+    MyOrderSubmittedBody:
+      summary: Just submitted
+      value:
+        order:
+          orderId: FG-7K2P9Q
+          restaurantId: rst_4H7KQ2M9XPTB
+          restaurantName: Dar Lella
+          status: SUBMITTED
+          statusLabel: Order received
+          total: 24.5
+          totalMillimes: 24500
+          paymentMethod: CASH_ON_DELIVERY
+          paymentStatus: PENDING
+          createdAt: '2026-11-02T08:14:03.512Z'
+          serviceDate: '2026-11-02'
+          deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+          items:
+            - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+            - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+            - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+          delivery: null
+
+    MyOrderOutForDeliveryBody:
+      summary: On the way with Karim
+      value:
+        order:
+          orderId: FG-7K2P9Q
+          restaurantId: rst_4H7KQ2M9XPTB
+          restaurantName: Dar Lella
+          status: OUT_FOR_DELIVERY
+          statusLabel: On the way
+          total: 24.5
+          totalMillimes: 24500
+          paymentMethod: CASH_ON_DELIVERY
+          paymentStatus: PENDING
+          createdAt: '2026-11-02T08:14:03.512Z'
+          serviceDate: '2026-11-02'
+          deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+          items:
+            - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+            - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+            - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+          delivery:
+            assignmentId: asg_T4KQ9MX2RH7P
+            status: STARTED
+            deliveryPersonName: Karim Dridi
+            assignedAt: '2026-11-02T10:45:12.004Z'
+            startedAt: '2026-11-02T11:20:40.871Z'
+            completedAt: null
+
+    RestaurantQueueBody:
+      summary: Dar Lella's queue for today
+      value:
+        orders:
+          - orderId: FG-7K2P9Q
+            restaurantId: rst_4H7KQ2M9XPTB
+            status: SUBMITTED
+            statusLabel: Order received
+            total: 24.5
+            totalMillimes: 24500
+            paymentMethod: CASH_ON_DELIVERY
+            paymentStatus: PENDING
+            createdAt: '2026-11-02T08:14:03.512Z'
+            serviceDate: '2026-11-02'
+            deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+            items:
+              - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+              - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+              - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+            delivery: null
+            customer:
+              customerId: cus_9QW4T7KPMX2H
+              fullName: Omar Trabelsi
+              phoneNumber: '+21698333444'
+              organizationName: Lac 2 Tech Park
+              eligible: true
+            allowedNext: [IN_PREPARATION, ASSIGNED]
+
+    RestaurantOrderInPreparationBody:
+      summary: Order now in preparation
+      value:
+        order:
+          orderId: FG-7K2P9Q
+          restaurantId: rst_4H7KQ2M9XPTB
+          status: IN_PREPARATION
+          statusLabel: Being prepared
+          total: 24.5
+          totalMillimes: 24500
+          paymentMethod: CASH_ON_DELIVERY
+          paymentStatus: PENDING
+          createdAt: '2026-11-02T08:14:03.512Z'
+          serviceDate: '2026-11-02'
+          deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+          items:
+            - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+            - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+            - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+          delivery: null
+          customer:
+            customerId: cus_9QW4T7KPMX2H
+            fullName: Omar Trabelsi
+            phoneNumber: '+21698333444'
+            organizationName: Lac 2 Tech Park
+            eligible: true
+          allowedNext: [ASSIGNED]
+
+    RestaurantOrderAssignedBody:
+      summary: Order assigned to Karim
+      value:
+        order:
+          orderId: FG-7K2P9Q
+          restaurantId: rst_4H7KQ2M9XPTB
+          status: ASSIGNED
+          statusLabel: Delivery person assigned
+          total: 24.5
+          totalMillimes: 24500
+          paymentMethod: CASH_ON_DELIVERY
+          paymentStatus: PENDING
+          createdAt: '2026-11-02T08:14:03.512Z'
+          serviceDate: '2026-11-02'
+          deadlineSnapshot: '2026-11-02T22:30:00.000Z'
+          items:
+            - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+            - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+            - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+          delivery:
+            assignmentId: asg_T4KQ9MX2RH7P
+            status: ASSIGNED
+            deliveryPersonName: Karim Dridi
+            assignedAt: '2026-11-02T10:45:12.004Z'
+            startedAt: null
+            completedAt: null
+          customer:
+            customerId: cus_9QW4T7KPMX2H
+            fullName: Omar Trabelsi
+            phoneNumber: '+21698333444'
+            organizationName: Lac 2 Tech Park
+            eligible: true
+          allowedNext: [OUT_FOR_DELIVERY]
+
+    AssignmentAssignedBody:
+      summary: Assignment just received
+      value:
+        assignment:
+          assignmentId: asg_T4KQ9MX2RH7P
+          status: ASSIGNED
+          assignedAt: '2026-11-02T10:45:12.004Z'
+          startedAt: null
+          completedAt: null
+          order:
+            orderId: FG-7K2P9Q
+            status: ASSIGNED
+            statusLabel: Delivery person assigned
+            items:
+              - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+              - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+              - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+            total: 24.5
+          pickup:
+            restaurantName: Dar Lella
+            address: Rue du Lac Léman, Les Berges du Lac, Tunis
+          customer:
+            fullName: Omar Trabelsi
+            phoneNumber: '+21698333444'
+            destination: Lac 2 Tech Park
+          payment:
+            method: CASH_ON_DELIVERY
+            status: PENDING
+            amountToCollect: 24.5
+
+    AssignmentStartedBody:
+      summary: Delivery started (order out for delivery)
+      value:
+        assignment:
+          assignmentId: asg_T4KQ9MX2RH7P
+          status: STARTED
+          assignedAt: '2026-11-02T10:45:12.004Z'
+          startedAt: '2026-11-02T11:20:40.871Z'
+          completedAt: null
+          order:
+            orderId: FG-7K2P9Q
+            status: OUT_FOR_DELIVERY
+            statusLabel: On the way
+            items:
+              - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+              - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+              - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+            total: 24.5
+          pickup:
+            restaurantName: Dar Lella
+            address: Rue du Lac Léman, Les Berges du Lac, Tunis
+          customer:
+            fullName: Omar Trabelsi
+            phoneNumber: '+21698333444'
+            destination: Lac 2 Tech Park
+          payment:
+            method: CASH_ON_DELIVERY
+            status: PENDING
+            amountToCollect: 24.5
+
+    AssignmentCompletedBody:
+      summary: Delivered, cash collected
+      value:
+        assignment:
+          assignmentId: asg_T4KQ9MX2RH7P
+          status: COMPLETED
+          assignedAt: '2026-11-02T10:45:12.004Z'
+          startedAt: '2026-11-02T11:20:40.871Z'
+          completedAt: '2026-11-02T11:42:05.390Z'
+          order:
+            orderId: FG-7K2P9Q
+            status: DELIVERED
+            statusLabel: Delivered
+            items:
+              - { menuItemId: item_B2K9QX7MRT4H, name: "Brik à l'oeuf", quantity: 2, unitPrice: 3.5, lineTotal: 7 }
+              - { menuItemId: item_C9RM4TK7QX2P, name: Citronnade, quantity: 1, unitPrice: 3, lineTotal: 3 }
+              - { menuItemId: item_7TPM3KQ2XH9R, name: Couscous au poulet, quantity: 1, unitPrice: 14.5, lineTotal: 14.5 }
+            total: 24.5
+          pickup:
+            restaurantName: Dar Lella
+            address: Rue du Lac Léman, Les Berges du Lac, Tunis
+          customer:
+            fullName: Omar Trabelsi
+            phoneNumber: '+21698333444'
+            destination: Lac 2 Tech Park
+          payment:
+            method: CASH_ON_DELIVERY
+            status: PAID
+            amountToCollect: 0
