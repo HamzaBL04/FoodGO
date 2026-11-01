@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "traceability": "node scripts/traceability.js",
     "metrics": "node scripts/metrics.js",
-    "benchmark": "node scripts/benchmark.js"
+    "benchmark": "node scripts/benchmark.js",
+    "demo": "node demo/record-demo.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
