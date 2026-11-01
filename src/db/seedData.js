@@ -34,13 +34,13 @@ function mulberry32(seed) {
 
 const hash = (pw) => bcrypt.hashSync(pw, config.bcryptRounds);
 
-// FR-32 / BR-17: every demo workplace is in Lac 3 or Zone Industrielle Le Kram.
+// FR-32 / BR-17: every demo workplace is in Lac 3 / Zone Industrielle Le Kram.
 // The names are fictional.
 function seedOrganizations(repos) {
   const orgs = {
-    lac3Tower: { organizationId: newId('org'), name: 'Lac 3 Business Tower', type: 'WORKPLACE', serviceZone: 'LAC_3' },
-    lac3TechHub: { organizationId: newId('org'), name: 'Lac 3 Tech Hub', type: 'WORKPLACE', serviceZone: 'LAC_3' },
-    kramTextile: { organizationId: newId('org'), name: 'Kram Textile Works', type: 'WORKPLACE', serviceZone: 'ZI_KRAM' },
+    lac3Tower: { organizationId: newId('org'), name: 'Lac 3 Business Tower', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' },
+    lac3TechHub: { organizationId: newId('org'), name: 'Lac 3 Tech Hub', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' },
+    kramTextile: { organizationId: newId('org'), name: 'Kram Textile Works', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' },
   };
   Object.values(orgs).forEach((o) => repos.customers.insertOrganization(o));
   return orgs;
@@ -233,14 +233,14 @@ function seedDemoData(repos, { clock, historyDays = 28 } = {}) {
       name: 'Dar Lella',
       deadline: '23:30', // demo setting: open almost all day so the app can be tried any time
       address: 'Les Berges du Lac, Tunis',
-      zone: 'LAC_3',
+      zone: 'LAC3_ZI_KRAM',
       menu: MENUS.darLella,
     });
     const kramSnack = seedRestaurant(repos, {
       name: 'Kram Snack',
       deadline: '10:30', // a real morning deadline, to see BR-01 refuse late orders
       address: 'Le Kram, Tunis',
-      zone: 'ZI_KRAM',
+      zone: 'LAC3_ZI_KRAM',
       menu: MENUS.kramSnack,
     });
 

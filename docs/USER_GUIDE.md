@@ -6,7 +6,7 @@ Open the app (for the local demo: http://localhost:3000). Everyone starts on the
 
 ## Customers
 
-**Before you start:** a restaurant must register you in person (bring an ID). They record your name, phone number and workplace. FoodGO only delivers to workplaces in **Lac 3** and **Zone Industrielle Le Kram**.
+**Before you start:** a restaurant must register you in person (bring an ID). They record your name, phone number and workplace. FoodGO only delivers to workplaces in **Lac 3 / Zone Industrielle Le Kram**.
 
 1. **Sign in.** Enter your phone number (`+216…`) and tap **Send my code**. Type the 6-digit code you receive. In the demo no SMS is sent: the code is shown on screen and filled in for you.
 2. **Pick a restaurant.** You see only the restaurants that registered you. The bar under each name shows the ordering deadline and how much time is left.
@@ -25,7 +25,7 @@ Sign in with your email and password, choosing **Restaurant staff**.
   - Choose a delivery person in the drop-down and click **Assign**. Only your own team appears.
 - **Prep forecast** — how many of each dish to expect for your next service, with a range and a confidence label, plus advice for the kitchen. It is advice: you decide what to cook. The "How reliable is it?" box shows how far off it has been recently.
 - **Menu** — add dishes, change prices (orders already placed keep their price), switch a dish off when you run out, or remove it.
-- **Customers** — register a customer in person: name, phone, workplace (each workplace shows its zone). Tick **I checked their identity in person**. Untick **They belong to an organization we serve** if they do not meet your rule. Use the switch in the list to stop or allow someone ordering later. If their workplace is missing, add it under *Missing workplace?* and choose its zone, Lac 3 or Zone Industrielle Le Kram. FoodGO does not serve other areas.
+- **Customers** — register a customer in person: name, phone, workplace. Tick **I checked their identity in person**. Untick **They belong to an organization we serve** if they do not meet your rule. Use the switch in the list to stop or allow someone ordering later. If their workplace is missing, add it under *Missing workplace?* (its zone is Lac 3 / Zone Industrielle Le Kram; FoodGO does not serve other areas).
 - **Delivery team** — create an account (username and temporary password) for each person you employ to deliver.
 - **Settings** — your daily ordering deadline and which payment methods you accept. Changing the deadline never affects orders already placed.
 
@@ -43,7 +43,7 @@ Sign in with the username and password your restaurant gave you, choosing **Deli
 Sign in with **Platform administrator**.
 
 - **Monitoring** — today's orders per restaurant and stage, account totals, and the recent activity log (sign-ins, registrations, assignments, deliveries). Administrators can read this but cannot change orders.
-- **Restaurants** — add a restaurant with its deadline and its zone (Lac 3 or Zone Industrielle Le Kram).
+- **Restaurants** — add a restaurant with its deadline; its zone is Lac 3 / Zone Industrielle Le Kram, the only area FoodGO serves.
 - **Staff accounts** — create the first staff account for a restaurant.
 
 ## Demo accounts

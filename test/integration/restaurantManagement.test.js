@@ -181,9 +181,9 @@ test('organizations: list and create, duplicates refused', async () => {
   const auth = await staffOf(app);
   const list = await request(app).get('/api/v1/organizations').set('Authorization', auth);
   assert.equal(list.body.organizations.length, 3);
-  const created = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'Kram Port Logistics', type: 'WORKPLACE', serviceZone: 'ZI_KRAM' });
+  const created = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'Kram Port Logistics', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' });
   assert.equal(created.status, 201);
-  const dup = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'kram port logistics', type: 'WORKPLACE', serviceZone: 'ZI_KRAM' });
+  const dup = await request(app).post('/api/v1/organizations').set('Authorization', auth).send({ name: 'kram port logistics', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' });
   assert.equal(dup.status, 400);
 });
 

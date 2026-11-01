@@ -1,6 +1,6 @@
 # Lab 6 — Setup Report
 
-**Project:** FoodGO — pre-order lunch delivery for Lac 3 and Zone Industrielle Le Kram, to cut lunchtime traffic
+**Project:** FoodGO — pre-order lunch delivery for Lac 3 / Zone Industrielle Le Kram, to cut lunchtime traffic
 **Course:** CS 488 AI-First Software Engineering, Fall 2026 · **Date:** 1 Nov 2026
 
 ## Repository and members
@@ -24,7 +24,7 @@ Our repository already existed when Lab 6 started: the midterm MVP had been buil
 
 ## Stack
 
-**Node.js 22.14+, Express 5, SQLite (better-sqlite3), plain HTML + ES modules, node:test + supertest + c8, ESLint, GitHub Actions.** One-line reason: it installs and runs with a single `npm install && npm start` on any machine, and SQLite's synchronous transactions make the SDD's all-or-nothing operations simple ([ADR-0002](decisions/0002-node-express-sqlite-stack.md)). Other decisions recorded: [0004 advisory AI forecast](decisions/0004-advisory-ai-demand-forecast.md), [0005 Mermaid for UML](decisions/0005-mermaid-for-uml.md), [0006 prebuilt SQLite, no compiler](decisions/0006-prebuilt-sqlite-no-compiler.md), [0007 service area: Lac 3 and Zone Industrielle Le Kram](decisions/0007-service-area-lac3-zi-kram.md).
+**Node.js 22.14+, Express 5, SQLite (better-sqlite3), plain HTML + ES modules, node:test + supertest + c8, ESLint, GitHub Actions.** One-line reason: it installs and runs with a single `npm install && npm start` on any machine, and SQLite's synchronous transactions make the SDD's all-or-nothing operations simple ([ADR-0002](decisions/0002-node-express-sqlite-stack.md)). Other decisions recorded: [0004 advisory AI forecast](decisions/0004-advisory-ai-demand-forecast.md), [0005 Mermaid for UML](decisions/0005-mermaid-for-uml.md), [0006 prebuilt SQLite, no compiler](decisions/0006-prebuilt-sqlite-no-compiler.md), [0007 service area: Lac 3 / Zone Industrielle Le Kram](decisions/0007-service-area-lac3-zi-kram.md).
 
 ## Evidence
 

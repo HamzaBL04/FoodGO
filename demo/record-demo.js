@@ -79,8 +79,8 @@ async function main() {
   const contexts = [];
 
   contexts.push(await card(browser, 'Midterm MVP demo — CS 488 AI-First Software Engineering', [
-    'Pre-order lunch in Lac 3 and Zone Industrielle Le Kram, and stay off the lunchtime roads',
-    'Order in the morning · the restaurant delivers at noon · only these two zones are served',
+    'Pre-order lunch in Lac 3 / Zone Industrielle Le Kram, and stay off the lunchtime roads',
+    'Order in the morning · the restaurant delivers at noon · this area only',
     'Hamza Ben Labiedh · Ali Chamakh · Mohamed Krid',
   ]));
 
@@ -99,7 +99,7 @@ async function main() {
     await c.click('#otp-verify button[type=submit]');
     await c.waitForSelector('.restaurant-card');
   });
-  await scene(c, 'Only restaurants that registered her are listed, each with its zone: Lac 3 or ZI Le Kram (BR-04, FR-32)', async () => {
+  await scene(c, 'Only restaurants that registered her are listed, all inside the Lac 3 / ZI Le Kram area (BR-04, FR-32)', async () => {
     await pause(1800);
     await caption(c, 'The bar under each restaurant shows the time left before its ordering deadline (BR-01)');
     await pause(2600);
@@ -175,12 +175,12 @@ async function main() {
     await s.click('.switch >> nth=5');
     await pause(1000);
   });
-  await scene(s, 'Customers are registered in person, with a workplace in Lac 3 or Zone Industrielle Le Kram (FR-01–FR-04, BR-05, FR-32)', async () => {
+  await scene(s, 'Customers are registered in person, with a workplace in Lac 3 / Zone Industrielle Le Kram (FR-01–FR-04, BR-05, FR-32)', async () => {
     await s.click('[data-tab=customers]');
     await s.waitForSelector('#register');
     await slowType(s, '#register input[name=fullName]', 'Lina Ghannouchi');
     await slowType(s, '#register input[name=phoneNumber]', '+21627000111');
-    await s.selectOption('#org-select', { label: 'Kram Textile Works (Zone Industrielle Le Kram)' });
+    await s.selectOption('#org-select', { label: 'Kram Textile Works (Lac 3 / Zone Industrielle Le Kram)' });
     await pause(900);
     await s.check('#register input[name=identityVerified]');
     await pause(700);
@@ -232,7 +232,7 @@ async function main() {
     await a.waitForSelector('#audit tr:nth-child(2)');
     await pause(3500);
   });
-  await scene(a, 'Every restaurant is placed in one of the two zones FoodGO serves; any other area is refused (FR-32, BR-17)', async () => {
+  await scene(a, 'Every restaurant must be inside the Lac 3 / ZI Le Kram area; any other area is refused (FR-32, BR-17)', async () => {
     await a.click('[data-tab=restaurants]');
     await a.waitForSelector('#restaurants tr');
     await pause(1500);

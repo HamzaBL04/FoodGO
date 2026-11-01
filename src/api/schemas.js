@@ -7,8 +7,8 @@ const phone = z.string().trim().regex(/^\+216\d{8}$/, 'phone number must look li
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'must be HH:MM');
 const password = z.string().min(8, 'password must be at least 8 characters').max(128);
 const identity = z.string().trim().min(3).max(120);
-// FR-32 / BR-17: Lac 3 or Zone Industrielle Le Kram only (ADR-0007).
-const serviceZone = z.enum(ZONE_CODES, { message: 'FoodGO serves only Lac 3 (LAC_3) and Zone Industrielle Le Kram (ZI_KRAM)' });
+// FR-32 / BR-17: the Lac 3 / Zone Industrielle Le Kram area only (ADR-0007).
+const serviceZone = z.enum(ZONE_CODES, { message: 'FoodGO serves only Lac 3 / Zone Industrielle Le Kram (LAC3_ZI_KRAM)' });
 
 const schemas = {
   signIn: z.object({

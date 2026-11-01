@@ -82,7 +82,7 @@ tags:
   - name: Admin
     description: Platform administration (SDD §5.1.5) — restaurants, staff accounts, monitoring. ADMIN only.
   - name: Organizations
-    description: Workplaces customers belong to (FR-04), each in Lac 3 or Zone Industrielle Le Kram (FR-32). STAFF and ADMIN.
+    description: Workplaces customers belong to (FR-04), each inside the Lac 3 / Zone Industrielle Le Kram area (FR-32). STAFF and ADMIN.
   - name: Events
     description: Live order status stream over Server-Sent Events (FR-24).
   - name: Meta
@@ -404,7 +404,7 @@ paths:
                   - restaurantId: rst_4H7KQ2M9XPTB
                     name: Dar Lella
                     address: Les Berges du Lac, Tunis
-                    zone: Lac 3
+                    zone: Lac 3 / Zone Industrielle Le Kram
                     paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
                     orderingDeadline: '23:30'
                     orderingOpen: true
@@ -440,7 +440,7 @@ paths:
                   restaurantId: rst_4H7KQ2M9XPTB
                   name: Dar Lella
                   address: Les Berges du Lac, Tunis
-                  zone: Lac 3
+                  zone: Lac 3 / Zone Industrielle Le Kram
                   paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
                   orderingDeadline: '23:30'
                   orderingOpen: true
@@ -810,7 +810,7 @@ paths:
                   restaurantId: rst_4H7KQ2M9XPTB
                   name: Dar Lella
                   address: Les Berges du Lac, Tunis
-                  serviceZone: LAC_3
+                  serviceZone: LAC3_ZI_KRAM
                   orderingDeadline: '23:30'
                   cashOnDeliveryEnabled: true
                   ePaymentEnabled: true
@@ -859,7 +859,7 @@ paths:
                   restaurantId: rst_4H7KQ2M9XPTB
                   name: Dar Lella
                   address: Les Berges du Lac, Tunis
-                  serviceZone: LAC_3
+                  serviceZone: LAC3_ZI_KRAM
                   orderingDeadline: '10:30'
                   cashOnDeliveryEnabled: true
                   ePaymentEnabled: false
@@ -1098,7 +1098,7 @@ paths:
                     fullName: Omar Trabelsi
                     phoneNumber: '+21698333444'
                     organizationName: Lac 3 Tech Hub
-                    organizationZone: Lac 3
+                    organizationZone: Lac 3 / Zone Industrielle Le Kram
                     eligible: true
                     status: ACTIVE
                     registeredAt: '2026-11-01T09:12:44.103Z'
@@ -1148,7 +1148,7 @@ paths:
                   phoneNumber: '+21698333444'
                   organizationId: org_3RX7K2PQ9MTB
                   organizationName: Lac 3 Tech Hub
-                  organizationZone: Lac 3
+                  organizationZone: Lac 3 / Zone Industrielle Le Kram
                   organizationType: WORKPLACE
                   eligible: true
                   status: ACTIVE
@@ -1209,7 +1209,7 @@ paths:
                   phoneNumber: '+21698333444'
                   organizationId: org_3RX7K2PQ9MTB
                   organizationName: Lac 3 Tech Hub
-                  organizationZone: Lac 3
+                  organizationZone: Lac 3 / Zone Industrielle Le Kram
                   organizationType: WORKPLACE
                   eligible: true
                   status: ACTIVE
@@ -1265,7 +1265,7 @@ paths:
                   phoneNumber: '+21698333444'
                   organizationId: org_3RX7K2PQ9MTB
                   organizationName: Lac 3 Tech Hub
-                  organizationZone: Lac 3
+                  organizationZone: Lac 3 / Zone Industrielle Le Kram
                   organizationType: WORKPLACE
                   eligible: false
                   status: ACTIVE
@@ -1473,9 +1473,9 @@ paths:
                       $ref: '#/components/schemas/Organization'
               example:
                 organizations:
-                  - { organizationId: org_6TQ2MK9XRH4P, name: Kram Textile Works, type: WORKPLACE, status: ACTIVE, serviceZone: ZI_KRAM, zone: Zone Industrielle Le Kram }
-                  - { organizationId: org_8KM4QT2XPR7H, name: Lac 3 Business Tower, type: WORKPLACE, status: ACTIVE, serviceZone: LAC_3, zone: Lac 3 }
-                  - { organizationId: org_3RX7K2PQ9MTB, name: Lac 3 Tech Hub, type: WORKPLACE, status: ACTIVE, serviceZone: LAC_3, zone: Lac 3 }
+                  - { organizationId: org_6TQ2MK9XRH4P, name: Kram Textile Works, type: WORKPLACE, status: ACTIVE, serviceZone: LAC3_ZI_KRAM, zone: Lac 3 / Zone Industrielle Le Kram }
+                  - { organizationId: org_8KM4QT2XPR7H, name: Lac 3 Business Tower, type: WORKPLACE, status: ACTIVE, serviceZone: LAC3_ZI_KRAM, zone: Lac 3 / Zone Industrielle Le Kram }
+                  - { organizationId: org_3RX7K2PQ9MTB, name: Lac 3 Tech Hub, type: WORKPLACE, status: ACTIVE, serviceZone: LAC3_ZI_KRAM, zone: Lac 3 / Zone Industrielle Le Kram }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1486,7 +1486,7 @@ paths:
       tags: [Organizations]
       operationId: createOrganization
       summary: Create an organization
-      description: Creates a workplace, campus or institution inside the service area; names are unique case-insensitively (FR-04, D-06). `serviceZone` must be LAC_3 or ZI_KRAM (FR-32, BR-17). STAFF or ADMIN.
+      description: Creates a workplace, campus or institution inside the service area; names are unique case-insensitively (FR-04, D-06). `serviceZone` must be LAC3_ZI_KRAM, the only area served (FR-32, BR-17). STAFF or ADMIN.
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1516,8 +1516,8 @@ paths:
                   name: Kram Port Logistics
                   type: WORKPLACE
                   status: ACTIVE
-                  serviceZone: ZI_KRAM
-                  zone: Zone Industrielle Le Kram
+                  serviceZone: LAC3_ZI_KRAM
+                  zone: Lac 3 / Zone Industrielle Le Kram
         '400':
           description: VAL-001 — schema violation (including a missing or out-of-area `serviceZone`, FR-32) or an organization with this name already exists.
           content:
@@ -1566,7 +1566,7 @@ paths:
                     orderStatusLabel: Delivery person assigned
                     customerName: Omar Trabelsi
                     destination: Lac 3 Tech Hub
-                    destinationZone: Lac 3
+                    destinationZone: Lac 3 / Zone Industrielle Le Kram
                     total: 24.5
                     paymentMethod: CASH_ON_DELIVERY
                     paymentStatus: PENDING
@@ -1740,8 +1740,8 @@ paths:
                     cashOnDeliveryEnabled: 1
                     ePaymentEnabled: 1
                     address: Le Kram, Tunis
-                    serviceZone: ZI_KRAM
-                    zone: Zone Industrielle Le Kram
+                    serviceZone: LAC3_ZI_KRAM
+                    zone: Lac 3 / Zone Industrielle Le Kram
                   - restaurantId: rst_4H7KQ2M9XPTB
                     name: Dar Lella
                     status: ACTIVE
@@ -1750,8 +1750,8 @@ paths:
                     cashOnDeliveryEnabled: 1
                     ePaymentEnabled: 1
                     address: Les Berges du Lac, Tunis
-                    serviceZone: LAC_3
-                    zone: Lac 3
+                    serviceZone: LAC3_ZI_KRAM
+                    zone: Lac 3 / Zone Industrielle Le Kram
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1776,7 +1776,7 @@ paths:
               name: Dar Lella
               orderingDeadline: '23:30'
               address: Les Berges du Lac, Tunis
-              serviceZone: LAC_3
+              serviceZone: LAC3_ZI_KRAM
       responses:
         '201':
           description: The created restaurant (raw record).
@@ -1798,7 +1798,7 @@ paths:
                   cashOnDeliveryEnabled: 1
                   ePaymentEnabled: 1
                   address: Les Berges du Lac, Tunis
-                  serviceZone: LAC_3
+                  serviceZone: LAC3_ZI_KRAM
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2182,7 +2182,7 @@ components:
                 error: { code: ORDER-003, message: Restaurant is not taking orders }
             outsideServiceArea:
               value:
-                error: { code: ORDER-003, message: FoodGO only takes orders in Lac 3 and Zone Industrielle Le Kram }
+                error: { code: ORDER-003, message: FoodGO only takes orders in Lac 3 / Zone Industrielle Le Kram }
     PaymentFailed:
       description: PAY-001 — e-payment capture declined; the whole order is rolled back (BR-13).
       content:
@@ -2314,14 +2314,14 @@ components:
 
     ServiceZone:
       type: string
-      enum: [LAC_3, ZI_KRAM]
-      description: FoodGO serves only Lac 3 (LAC_3) and Zone Industrielle Le Kram (ZI_KRAM) — FR-32, BR-17, ADR-0007.
+      enum: [LAC3_ZI_KRAM]
+      description: FoodGO serves one area only, Lac 3 / Zone Industrielle Le Kram (one zone, two names) — FR-32, BR-17, ADR-0007.
 
     ZoneLabel:
       type: string
       nullable: true
-      description: Display name of a service zone ("Lac 3" or "Zone Industrielle Le Kram"); null for rows created before migration 003.
-      example: Lac 3
+      description: Display name of the service zone ("Lac 3 / Zone Industrielle Le Kram"); null for rows created before migration 003.
+      example: Lac 3 / Zone Industrielle Le Kram
 
     # ------------------------------------------------------------ meta / auth
     Meta:
@@ -3498,7 +3498,7 @@ components:
               fullName: Omar Trabelsi
               phoneNumber: '+21698333444'
               organizationName: Lac 3 Tech Hub
-              organizationZone: Lac 3
+              organizationZone: Lac 3 / Zone Industrielle Le Kram
               eligible: true
             allowedNext: [IN_PREPARATION, ASSIGNED]
 
@@ -3527,7 +3527,7 @@ components:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
             organizationName: Lac 3 Tech Hub
-            organizationZone: Lac 3
+            organizationZone: Lac 3 / Zone Industrielle Le Kram
             eligible: true
           allowedNext: [ASSIGNED]
 
@@ -3562,7 +3562,7 @@ components:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
             organizationName: Lac 3 Tech Hub
-            organizationZone: Lac 3
+            organizationZone: Lac 3 / Zone Industrielle Le Kram
             eligible: true
           allowedNext: [OUT_FOR_DELIVERY]
 
@@ -3587,12 +3587,12 @@ components:
           pickup:
             restaurantName: Dar Lella
             address: Les Berges du Lac, Tunis
-            zone: Lac 3
+            zone: Lac 3 / Zone Industrielle Le Kram
           customer:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
             destination: Lac 3 Tech Hub
-            destinationZone: Lac 3
+            destinationZone: Lac 3 / Zone Industrielle Le Kram
           payment:
             method: CASH_ON_DELIVERY
             status: PENDING
@@ -3619,12 +3619,12 @@ components:
           pickup:
             restaurantName: Dar Lella
             address: Les Berges du Lac, Tunis
-            zone: Lac 3
+            zone: Lac 3 / Zone Industrielle Le Kram
           customer:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
             destination: Lac 3 Tech Hub
-            destinationZone: Lac 3
+            destinationZone: Lac 3 / Zone Industrielle Le Kram
           payment:
             method: CASH_ON_DELIVERY
             status: PENDING
@@ -3651,12 +3651,12 @@ components:
           pickup:
             restaurantName: Dar Lella
             address: Les Berges du Lac, Tunis
-            zone: Lac 3
+            zone: Lac 3 / Zone Industrielle Le Kram
           customer:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
             destination: Lac 3 Tech Hub
-            destinationZone: Lac 3
+            destinationZone: Lac 3 / Zone Industrielle Le Kram
           payment:
             method: CASH_ON_DELIVERY
             status: PAID

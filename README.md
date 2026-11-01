@@ -1,6 +1,6 @@
 # FoodGO
 
-**Order lunch in the morning, stay off the lunchtime roads.** FoodGO is a pre-order food delivery platform **only for Lac 3 and Zone Industrielle Le Kram** in Tunis. Traffic in these two zones gets heavy at lunchtime because employees leave work at the same time to get food. With FoodGO they pre-order before a deadline set by the restaurant and stay at their desks. At the deadline the kitchen knows exactly what to cook, and the restaurant's own delivery staff bring lunch at noon. The platform coordinates, the restaurant delivers. ([Why only these two zones](docs/decisions/0007-service-area-lac3-zi-kram.md))
+**Order lunch in the morning, stay off the lunchtime roads.** FoodGO is a pre-order food delivery platform **only for Lac 3 / Zone Industrielle Le Kram** in Tunis (one area, known by both names). Traffic there gets heavy at lunchtime because employees leave work at the same time to get food. With FoodGO they pre-order before a deadline set by the restaurant and stay at their desks. At the deadline the kitchen knows exactly what to cook, and the restaurant's own delivery staff bring lunch at noon. The platform coordinates, the restaurant delivers. ([Why only this area](docs/decisions/0007-service-area-lac3-zi-kram.md))
 
 **Team:** Hamza Ben Labiedh, Ali Chamakh, Mohamed Krid
 **Course:** CS 488 — AI-First Software Engineering, MUST University, Fall 2026
@@ -58,7 +58,7 @@ API documentation: **http://localhost:3000/api/docs** (Swagger UI, from [`docs/a
 | Customer, 2 restaurants | `+21620111222` (Yasmine) | SMS code is shown on screen in demo mode |
 | Customer | `+21698333444` (Omar) | SMS code is shown on screen |
 | Restaurant staff, Dar Lella | `staff@darlella.tn` | `Staff#2026` |
-| Restaurant staff, Kram Snack (Zone Industrielle Le Kram) | `staff@kramsnack.tn` | `Staff#2026` |
+| Restaurant staff, Kram Snack | `staff@kramsnack.tn` | `Staff#2026` |
 | Delivery person, Dar Lella | `karim.d` | `Delivery#2026` |
 | Administrator | `admin@foodgo.tn` | `Admin#2026` |
 

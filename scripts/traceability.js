@@ -23,7 +23,7 @@ const FR = {
   'FR-25': 'Select payment method', 'FR-26': 'Payment upon delivery where enabled', 'FR-27': 'Tunisian e-payment where integrated',
   'FR-28': 'Record payment status', 'FR-29': 'Platform provisions restaurant staff', 'FR-30': 'Restaurant provisions delivery personnel',
   'FR-31': 'AI-assisted demand forecast (PROPOSED, A-13 withdrawn)',
-  'FR-32': 'Service area: Lac 3 and Zone Industrielle Le Kram only (team decision, ADR-0007)',
+  'FR-32': 'Service area: Lac 3 / Zone Industrielle Le Kram only (team decision, ADR-0007)',
 };
 const BR = {
   'BR-01': 'Submit before restaurant deadline', 'BR-02': 'Only available items orderable', 'BR-03': 'Restaurants manage their menus',

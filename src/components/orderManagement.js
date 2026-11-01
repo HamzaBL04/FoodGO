@@ -93,7 +93,7 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
       customer.assertMembership(customerId, restaurantId); // BR-04, BR-16
       const restaurant = repos.restaurants.findById(restaurantId);
       if (!restaurant || restaurant.status !== 'ACTIVE') throw new AppError('ORDER-003', 'Restaurant is not taking orders');
-      // FR-32 / BR-17: only Lac 3 and Zone Industrielle Le Kram (ADR-0007).
+      // FR-32 / BR-17: only Lac 3 / Zone Industrielle Le Kram (ADR-0007).
       const workplace = repos.customers.findCustomer(customerId);
       assertInServiceArea({ restaurantZone: restaurant.serviceZone, workplaceZone: workplace.organizationZone });
 

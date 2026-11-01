@@ -8,12 +8,12 @@ All notable changes to FoodGO. Newest at the top. One line per change. Based on 
 - Lab 6 workspace from the CS 488 starter template: `AI_CONTEXT.md` with per-tool AI configs (Claude, Copilot, Cursor), `CONTRIBUTING.md`, PR and issue templates, git hooks with a docs reminder, setup and structure scripts, `.env.example`, `docs/architecture.md`, `docs/setup.md`, ADRs 0001–0006, this changelog, Setup Report (ADR-0003).
 - `npm start`, `npm run dev` and `npm run seed` read an optional `.env` file.
 - CI job "Docs reminder" (never fails).
-- Service area: FoodGO serves only Lac 3 and Zone Industrielle Le Kram, to cut lunchtime traffic there (FR-32, BR-17, ADR-0007). Restaurants and workplaces carry a zone (migration 003); orders outside the area are refused with ORDER-003; zones are shown to every role.
+- Service area: FoodGO serves only Lac 3 / Zone Industrielle Le Kram (one area), to cut lunchtime traffic there (FR-32, BR-17, ADR-0007). Restaurants and workplaces carry a zone (migration 003); orders outside the area are refused with ORDER-003; the area is shown to every role.
 
 ### Changed
 - Licence: MIT (from the starter template).
-- Creating a restaurant (admin) or a workplace (staff) now requires `serviceZone` (`LAC_3` or `ZI_KRAM`).
-- Demo data moved into the service area: Dar Lella in Lac 3; "Campus Bites" renamed Kram Snack, in Zone Industrielle Le Kram (staff sign-in `staff@kramsnack.tn`); fictional workplaces Lac 3 Business Tower, Lac 3 Tech Hub, Kram Textile Works. Run `npm run seed` to rebuild a local database.
+- Creating a restaurant (admin) or a workplace (staff) now requires `serviceZone` (`LAC3_ZI_KRAM`, the only value).
+- Demo data moved into the service area: Dar Lella stays; "Campus Bites" renamed Kram Snack (staff sign-in `staff@kramsnack.tn`); fictional workplaces Lac 3 Business Tower, Lac 3 Tech Hub, Kram Textile Works. Run `npm run seed` to rebuild a local database.
 - Proposal (v1.1), backlog (US-32), README, guides, architecture, OpenAPI and the demo video describe the new positioning.
 
 ## [0.1.0] — 2026-11-01 — Midterm MVP
