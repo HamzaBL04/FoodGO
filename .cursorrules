@@ -1,0 +1,12 @@
+# Cursor Rules (legacy format — kept for older Cursor versions)
+# The single source of truth is AI_CONTEXT.md at the repo root. Newer Cursor
+# versions use .cursor/rules/project.mdc instead.
+
+Follow AI_CONTEXT.md for the FoodGO project summary, stack, structure and conventions.
+
+- Layers: routes -> one component -> repositories; only repositories write SQL.
+- Restaurant scope is a required argument for restaurant-owned data.
+- Don't invent UNRESOLVED business rules; leave a TODO: comment instead.
+- Never hardcode secrets — use .env (gitignored).
+- No new dependency without team agreement; note it in the PR.
+- New features ship with tests; update docs/CHANGELOG.md when behaviour changes.

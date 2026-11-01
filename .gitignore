@@ -1,8 +1,38 @@
-node_modules/
+# --- Secrets & local environment (NEVER commit these) -----------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+.DS_Store
+Thumbs.db
+
+# --- Editor / IDE ------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.sample.json
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Logs & temp -------------------------------------------------------------
+*.log
+logs/
+tmp/
+.cache/
 coverage/
+
+# --- Node (stack appendix: node.md) -------------------------------------------
+node_modules/
+dist/
+build/
+npm-debug.log*
+
+# --- FoodGO ------------------------------------------------------------------
+# Local SQLite database (recreated with demo data on first start)
 data/*.db
 data/*.db-*
-.env
-*.log
-.DS_Store
+# Raw per-role recordings made by demo/record-demo.js
 demo/raw/
