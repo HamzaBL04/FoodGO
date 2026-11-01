@@ -15,6 +15,7 @@
   <main class="page">
     <nav class="tabs" role="tablist">
       <button data-tab="orders" role="tab">Today's orders</button>
+      <button data-tab="forecast" role="tab">Prep forecast</button>
       <button data-tab="menu" role="tab">Menu</button>
       <button data-tab="customers" role="tab">Customers</button>
       <button data-tab="team" role="tab">Delivery team</button>
@@ -28,6 +29,8 @@
       </div>
       <div class="board" id="board"></div>
     </section>
+
+    <section data-view="forecast" hidden><div id="forecast"></div></section>
 
     <section data-view="menu" hidden>
       <div class="grid-2">

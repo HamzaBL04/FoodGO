@@ -14,6 +14,8 @@ const { createPaymentComponent } = require('./components/paymentComponent');
 const { createNotificationComponent } = require('./components/notificationComponent');
 const { createOrderManagement } = require('./components/orderManagement');
 const { createDeliveryManagement } = require('./components/deliveryManagement');
+const { createAnthropicAdapter } = require('./adapters/llmAdapter');
+const { createForecastComponent } = require('./components/forecastComponent');
 
 /**
  * Composition root: wires repositories, adapters and business components.
@@ -25,6 +27,7 @@ function createContext({ db, clock = systemClock(), adapters = {}, config = defa
   const paymentAdapter = adapters.payment || createSandboxPaymentAdapter();
   const notificationAdapter = adapters.notification || createSandboxNotificationAdapter({ log: !config.isTest });
   const logger = config.isTest ? { error: () => {} } : console;
+  const llm = adapters.llm || createAnthropicAdapter({ apiKey: config.anthropicApiKey, model: config.anthropicModel });
 
   const auth = createAuthComponent({ repos, clock, sms, config });
   const admin = createAdminComponent({ repos, clock, auth });
@@ -34,13 +37,14 @@ function createContext({ db, clock = systemClock(), adapters = {}, config = defa
   const payments = createPaymentComponent({ repos, clock, paymentAdapter });
   const orders = createOrderManagement({ repos, clock, customer, payments, notifications });
   const delivery = createDeliveryManagement({ repos, clock, orders, payments, notifications });
+  const forecast = createForecastComponent({ repos, clock, llm, logger });
 
   return {
     config,
     clock,
     repos,
-    adapters: { sms, payment: paymentAdapter, notification: notificationAdapter },
-    components: { auth, admin, restaurantManagement, customer, notifications, payments, orders, delivery },
+    adapters: { sms, payment: paymentAdapter, notification: notificationAdapter, llm },
+    components: { auth, admin, restaurantManagement, customer, notifications, payments, orders, delivery, forecast },
   };
 }
 
