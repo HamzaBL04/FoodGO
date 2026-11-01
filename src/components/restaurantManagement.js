@@ -4,6 +4,7 @@ const { AppError } = require('../domain/errors');
 const { newId } = require('../domain/ids');
 const { toMillimes } = require('../domain/money');
 const { menuItemView, restaurantSettingsView } = require('./presenters');
+const { createAuditor } = require('./audit');
 
 /**
  * Restaurant Management component (SDD §2.3): menus and availability,
@@ -12,11 +13,9 @@ const { menuItemView, restaurantSettingsView } = require('./presenters');
  */
 function createRestaurantManagement({ repos, clock, auth, sms }) {
   const nowIso = () => clock.now().toISOString();
+  const writeAudit = createAuditor({ repos, clock });
   const audit = (principal, restaurantId, action, entity, entityId, detail) =>
-    repos.platform.audit({
-      at: nowIso(), actorRole: principal.role, actorId: principal.subjectId, restaurantId,
-      action, entity, entityId, detail: detail ? JSON.stringify(detail) : null,
-    });
+    writeAudit(principal, { restaurantId, action, entity, entityId, detail: detail || null });
 
   function restaurantOrThrow(restaurantId) {
     const r = repos.restaurants.findById(restaurantId);

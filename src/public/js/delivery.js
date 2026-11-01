@@ -25,18 +25,20 @@ async function loadJobs() {
 }
 
 // ---------- one delivery (FR-21, FR-22, FR-23) ----------
+/** The one action available at each stage of a delivery (BR-11). */
+function actionFor(a, cash) {
+  if (a.status === 'ASSIGNED') return `<button class="big" id="start">I picked it up, start delivery</button>`;
+  if (a.status === 'COMPLETED') return `<p class="chip ok">Delivered at ${time(a.completedAt)}</p>`;
+  const cashBox = cash ? `<label class="check collect"><input type="checkbox" id="cash" checked> I collected ${tnd(a.payment.amountToCollect)} in cash</label>` : '';
+  return `${cashBox}<button class="big" id="confirm">Confirm delivered</button>`;
+}
+
 async function openJob(id) {
   try {
     const { assignment: a } = await api(`/delivery/assignments/${encodeURIComponent(id)}`);
     openId = id;
     const cash = a.payment.amountToCollect > 0;
-    let action = '';
-    if (a.status === 'ASSIGNED') action = `<button class="big" id="start">I picked it up, start delivery</button>`;
-    if (a.status === 'STARTED') {
-      action = `${cash ? `<label class="check collect"><input type="checkbox" id="cash" checked> I collected ${tnd(a.payment.amountToCollect)} in cash</label>` : ''}
-        <button class="big" id="confirm">Confirm delivered</button>`;
-    }
-    if (a.status === 'COMPLETED') action = `<p class="chip ok">Delivered at ${time(a.completedAt)}</p>`;
+    const action = actionFor(a, cash);
     $('#detail').innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:baseline"><h1 class="order-id" style="font-size:2rem">${esc(a.order.orderId)}</h1>${statusChip(a.order.status)}</div>
       ${cash && a.status !== 'COMPLETED' ? `<div class="collect">Collect ${tnd(a.payment.amountToCollect)} in cash</div>` : ''}
