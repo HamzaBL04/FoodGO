@@ -30,6 +30,7 @@ function createApp(ctx, { logger = console } = {}) {
 
   const api = express.Router();
   api.use(authenticate(ctx.components.auth));
+  api.get('/meta', (_req, res) => res.json({ name: 'FoodGO', version: '0.1.0', demoMode: ctx.config.demoMode }));
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     limit: ctx.config.isTest ? 10000 : 200,

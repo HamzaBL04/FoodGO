@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FoodGO — Administration</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="/admin">Food<span>GO</span></a>
+    <div class="who"></div>
+    <button id="signout" class="small">Sign out</button>
+  </header>
+  <main class="page">
+    <nav class="tabs" role="tablist">
+      <button data-tab="monitor" role="tab">Monitoring</button>
+      <button data-tab="restaurants" role="tab">Restaurants</button>
+      <button data-tab="staff" role="tab">Staff accounts</button>
+    </nav>
+
+    <section data-view="monitor">
+      <h1>Platform today</h1>
+      <div class="grid-2">
+        <div class="panel"><h3>Orders by restaurant</h3><table class="data" id="by-restaurant"></table></div>
+        <div class="panel"><h3>Accounts</h3><table class="data" id="totals"></table></div>
+      </div>
+      <div class="panel"><h3>Recent activity</h3><p class="muted">Security-relevant actions, newest first. Administrators can read this but never change orders.</p><table class="data" id="audit"></table></div>
+    </section>
+
+    <section data-view="restaurants" hidden>
+      <div class="grid-2">
+        <div class="panel"><h2>Restaurants</h2><table class="data" id="restaurants"></table></div>
+        <form class="panel" id="add-restaurant">
+          <h3>Add a restaurant</h3>
+          <label>Name <input type="text" name="name" required minlength="2"></label>
+          <label>Address <input type="text" name="address"></label>
+          <label>Daily ordering deadline <input type="time" name="orderingDeadline" value="10:30" required></label>
+          <button type="submit">Add restaurant</button>
+        </form>
+      </div>
+    </section>
+
+    <section data-view="staff" hidden>
+      <div class="grid-2">
+        <div class="panel"><h2>Restaurant staff</h2><table class="data" id="staff"></table></div>
+        <form class="panel" id="add-staff">
+          <h3>Create a staff account</h3>
+          <label>Restaurant <select name="restaurantId" id="staff-restaurant" required></select></label>
+          <label>Full name <input type="text" name="fullName" required></label>
+          <label>Email <input type="text" name="identity" required></label>
+          <label>Temporary password <input type="password" name="password" required minlength="8"></label>
+          <button type="submit">Create account</button>
+        </form>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

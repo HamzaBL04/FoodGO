@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FoodGO — Deliveries</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="/delivery">Food<span>GO</span></a>
+    <div class="who"></div>
+    <button id="signout" class="small">Sign out</button>
+  </header>
+  <main class="page narrow">
+    <section id="list-view">
+      <h1>My deliveries</h1>
+      <div id="jobs"></div>
+    </section>
+    <section id="detail-view" hidden>
+      <button class="secondary small" id="back">All my deliveries</button>
+      <div id="detail" style="margin-top:1rem"></div>
+    </section>
+  </main>
+  <script type="module" src="/js/delivery.js"></script>
+</body>
+</html>

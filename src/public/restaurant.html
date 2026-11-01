@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FoodGO — Restaurant</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="/restaurant">Food<span>GO</span></a>
+    <div class="who"></div>
+    <button id="signout" class="small">Sign out</button>
+  </header>
+  <main class="page">
+    <nav class="tabs" role="tablist">
+      <button data-tab="orders" role="tab">Today's orders</button>
+      <button data-tab="menu" role="tab">Menu</button>
+      <button data-tab="customers" role="tab">Customers</button>
+      <button data-tab="team" role="tab">Delivery team</button>
+      <button data-tab="settings" role="tab">Settings</button>
+    </nav>
+
+    <section data-view="orders">
+      <div class="row" style="align-items:center;margin-bottom:1rem">
+        <h1 style="margin:0" id="board-title">Today's orders</h1>
+        <p class="muted" id="board-summary" style="margin:0;text-align:right"></p>
+      </div>
+      <div class="board" id="board"></div>
+    </section>
+
+    <section data-view="menu" hidden>
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Menu</h2>
+          <p class="muted">Turn an item off when you run out. Customers still see it, but cannot order it.</p>
+          <table class="data" id="menu-table"></table>
+        </div>
+        <form class="panel" id="add-item">
+          <h3>Add a dish</h3>
+          <label>Name <input type="text" name="name" required minlength="2"></label>
+          <label>Description <input type="text" name="description"></label>
+          <label>Price in TND <input type="number" name="price" step="0.001" min="0.1" required></label>
+          <button type="submit">Add to menu</button>
+        </form>
+      </div>
+    </section>
+
+    <section data-view="customers" hidden>
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Registered customers</h2>
+          <p class="muted">Only people you registered can order from you. Turn eligibility off to stop someone ordering.</p>
+          <table class="data" id="customer-table"></table>
+        </div>
+        <div>
+          <form class="panel" id="register">
+            <h3>Register a customer in person</h3>
+            <label>Full name <input type="text" name="fullName" required minlength="2"></label>
+            <label>Phone number <span class="hint">used to sign in</span>
+              <input type="tel" name="phoneNumber" placeholder="+21620000000" required></label>
+            <label>Workplace or institution <select name="organizationId" id="org-select" required></select></label>
+            <label class="check"><input type="checkbox" name="eligible" checked> They belong to an organization we serve</label>
+            <label class="check"><input type="checkbox" name="identityVerified" required> I checked their identity in person</label>
+            <button type="submit">Register customer</button>
+          </form>
+          <form class="panel" id="add-org">
+            <h3>Missing workplace or campus?</h3>
+            <div class="row">
+              <label>Name <input type="text" name="name" required minlength="2"></label>
+              <label>Type <select name="type"><option value="WORKPLACE">Workplace</option><option value="CAMPUS">Campus</option><option value="INSTITUTION">Institution</option></select></label>
+            </div>
+            <button type="submit" class="secondary">Add organization</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section data-view="team" hidden>
+      <div class="grid-2">
+        <div class="panel">
+          <h2>Your delivery team</h2>
+          <p class="muted">The people your restaurant employs to deliver. Only they can be assigned your orders.</p>
+          <table class="data" id="team-table"></table>
+        </div>
+        <form class="panel" id="add-courier">
+          <h3>Give a team member an account</h3>
+          <label>Full name <input type="text" name="fullName" required></label>
+          <label>Username <input type="text" name="identity" required minlength="3"></label>
+          <label>Phone <span class="hint">optional</span> <input type="tel" name="phoneNumber" placeholder="+21650000000"></label>
+          <label>Temporary password <input type="password" name="password" required minlength="8"></label>
+          <button type="submit">Create account</button>
+        </form>
+      </div>
+    </section>
+
+    <section data-view="settings" hidden>
+      <form class="panel" id="settings" style="max-width:520px">
+        <h2>Ordering settings</h2>
+        <label>Daily ordering deadline <span class="hint">orders after this time are refused</span>
+          <input type="time" name="orderingDeadline" required></label>
+        <label class="check"><input type="checkbox" name="cashOnDeliveryEnabled"> Accept cash on delivery</label>
+        <label class="check"><input type="checkbox" name="ePaymentEnabled"> Accept e-payment</label>
+        <p class="muted">Changing the deadline never changes orders already placed.</p>
+        <button type="submit">Save settings</button>
+      </form>
+    </section>
+  </main>
+  <script type="module" src="/js/restaurant.js"></script>
+</body>
+</html>
