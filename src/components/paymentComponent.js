@@ -7,6 +7,7 @@ const { paymentMethodsFor } = require('./presenters');
 const PAYMENT_STATUS = Object.freeze({ PENDING: 'PENDING', PAID: 'PAID' });
 
 /**
+ * Payment Component: FR-25 to FR-28, BR-12, BR-13.
  * Strategy pattern (SDD §7.1.1). One strategy per method family; the order
  * path never branches on the method. A new provider is one adapter and one
  * registry entry.

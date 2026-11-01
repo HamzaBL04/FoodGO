@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS restaurant_staff (
 );
 
 -- BR-06/BR-07: employed and equipped by the restaurant. No vehicle or
--- equipment columns on purpose.
+-- equipment columns on purpose (BR-07 is enforced by absence).
 CREATE TABLE IF NOT EXISTS delivery_person (
   delivery_person_id TEXT PRIMARY KEY,
   restaurant_id      TEXT NOT NULL REFERENCES restaurant(restaurant_id),

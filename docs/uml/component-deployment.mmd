@@ -1,0 +1,46 @@
+%% FoodGO — Component and deployment diagram (SDD §2.2 layers, as built)
+flowchart TB
+  subgraph Clients["Browsers (customer phone, restaurant desktop, delivery phone, admin)"]
+    CUI["customer.html + customer.js"]
+    RUI["restaurant.html + restaurant.js"]
+    DUI["delivery.html + delivery.js"]
+    AUI["admin.html + admin.js"]
+  end
+
+  subgraph Node["Node.js 22 process — single deployable unit (Express)"]
+    direction TB
+    subgraph P["Presentation layer — thin routes, MVC views are static pages"]
+      MW["Middleware: helmet, rate limit, authenticate, requireRole, requireRestaurantScope, zod validate"]
+      R1["/auth  /customer  /customer/orders"]
+      R2["/restaurants/:id/*  /organizations"]
+      R3["/delivery  /admin  /events (SSE)"]
+      DOCS["/api/docs (Swagger UI)"]
+    end
+    subgraph B["Business logic layer — components"]
+      AUTH["Authentication & Access Control"]
+      CUS["Customer Component"]
+      RM["Restaurant Management"]
+      OM["Order Management + OrderState"]
+      DM["Delivery Management"]
+      PC["Payment Component (Strategy)"]
+      NC["Notification Component (Observer)"]
+      FC["Forecast Component (AI, advisory)"]
+    end
+    subgraph D["Data access layer"]
+      REPO["Repositories + unitOfWork (scope required, D-10)"]
+      ADP["Adapters: payment, SMS/OTP, notification, LLM"]
+    end
+  end
+
+  DB[("SQLite file data/foodgo.db (WAL)")]
+  EXT1[["Tunisian e-payment provider (sandbox)"]]
+  EXT2[["SMS / OTP provider (sandbox)"]]
+  EXT3[["Anthropic API (optional, ANTHROPIC_API_KEY)"]]
+
+  Clients -- "HTTPS JSON + SSE, cookie session" --> MW
+  MW --> R1 & R2 & R3
+  R1 & R2 & R3 --> B
+  B --> REPO
+  PC & AUTH & NC & FC --> ADP
+  REPO --> DB
+  ADP -.-> EXT1 & EXT2 & EXT3

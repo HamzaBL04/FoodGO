@@ -63,6 +63,7 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
       merged.set(menuItemId, (merged.get(menuItemId) || 0) + quantity);
     }
     return [...merged.entries()].map(([menuItemId, quantity]) => {
+      // FR-10: quantities per item are bounded.
       if (quantity > 50) throw new AppError('VAL-001', 'At most 50 of one item per order');
       // I-5: the item must belong to the same restaurant as the order.
       const item = repos.restaurants.findItem(restaurantId, menuItemId);

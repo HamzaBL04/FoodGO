@@ -1,0 +1,121 @@
+%% FoodGO — Class diagram (SDD §3.1, 12 domain classes) + key design classes.
+classDiagram
+  direction LR
+  class Organization {
+    +organizationId: String
+    +name: String
+    +type: OrgType
+    +status: String
+  }
+  class Customer {
+    +customerId: String
+    +fullName: String
+    +phoneNumber: String
+    +organizationId: String
+    +status: String
+  }
+  class RestaurantCustomer {
+    <<association>>
+    +restaurantId: String
+    +customerId: String
+    +credentialRef: String
+    +eligible: bool
+    +status: String
+    +registeredAt: DateTime
+  }
+  class Restaurant {
+    +restaurantId: String
+    +name: String
+    +orderingDeadline: HH:MM
+    +cashOnDeliveryEnabled: bool
+    +ePaymentEnabled: bool
+  }
+  class RestaurantStaff {
+    +staffId: String
+    +restaurantId: String
+    +identity: String
+    -credentialHash: String
+  }
+  class DeliveryPerson {
+    +deliveryPersonId: String
+    +restaurantId: String
+    +identity: String
+    -credentialHash: String
+  }
+  class Menu {
+    +menuId: String
+    +restaurantId: String
+    +status: String
+  }
+  class MenuItem {
+    +menuItemId: String
+    +name: String
+    +priceMillimes: int
+    +available: bool
+    +removed: bool
+  }
+  class Order {
+    +orderId: FG-XXXXXX
+    +status: OrderStatus
+    +totalMillimes: int
+    +paymentMethod: String
+    +paymentStatus: String «projection»
+    +serviceDate: Date
+    +deadlineSnapshot: DateTime
+  }
+  class OrderItem {
+    +quantity: int
+    +unitPriceMillimes: int «snapshot»
+    +nameSnapshot: String
+    +lineTotal() int
+  }
+  class Payment {
+    +paymentId: String
+    +method: String
+    +status: PaymentStatus
+    +providerReference: String
+    +amountMillimes: int
+  }
+  class DeliveryAssignment {
+    +assignmentId: String
+    +status: ASSIGNED|STARTED|COMPLETED
+    +assignedAt: DateTime
+    +startedAt: DateTime
+    +completedAt: DateTime
+  }
+  class OrderState {
+    <<State>>
+    +transition(from, to, ctx) status
+    +allowedNext(status) list
+  }
+  class PaymentMethodStrategy {
+    <<interface>>
+    +atCheckout(order) result
+    +atDelivery(order, cashCollected) result
+  }
+  class CashOnDeliveryStrategy
+  class EPaymentStrategy
+  class PaymentAdapter {
+    <<Adapter>>
+    +capture(orderId, amount) reference
+  }
+
+  Organization "1" --> "0..*" Customer : employs / enrols
+  Customer "1" --> "0..*" RestaurantCustomer
+  RestaurantCustomer "0..*" --> "1" Restaurant
+  Restaurant "1" --> "0..*" RestaurantStaff
+  Restaurant "1" --> "0..*" DeliveryPerson : BR-06
+  Restaurant "1" --> "1..*" Menu
+  Menu "1" *-- "1..*" MenuItem
+  Customer "1" --> "0..*" Order
+  Restaurant "1" --> "0..*" Order
+  Order "1" *-- "1..*" OrderItem
+  OrderItem "0..*" --> "1" MenuItem
+  Order "1" --> "1..*" Payment : I-3
+  Order "1" --> "0..1" DeliveryAssignment : BR-10
+  DeliveryAssignment "0..*" --> "1" DeliveryPerson : BR-08
+  Order ..> OrderState : status changes via
+  Payment ..> PaymentMethodStrategy : resolved at runtime
+  PaymentMethodStrategy <|.. CashOnDeliveryStrategy
+  PaymentMethodStrategy <|.. EPaymentStrategy
+  EPaymentStrategy --> PaymentAdapter

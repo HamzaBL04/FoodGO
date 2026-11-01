@@ -3,7 +3,8 @@
 const { AppError } = require('./errors');
 
 /**
- * State pattern for the order lifecycle (SDD §7.1.4, D-05, D-09).
+ * State pattern for the order lifecycle (SDD §7.1.4, D-05, D-09): BR-14,
+ * the order status is maintained throughout the lifecycle.
  *
  * Only the happy path is defined. It is PROPOSED: the specification names no
  * states. Cancelled / rejected / failed states are UNRESOLVED (SDD §6.3,

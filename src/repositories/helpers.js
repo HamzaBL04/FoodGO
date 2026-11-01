@@ -19,7 +19,7 @@ function mapRows(rows) {
 }
 
 /**
- * Constraint 3 / D-10: a restaurant-scoped repository method cannot be called
+ * BR-09 / BR-15, constraint 3 / D-10: a restaurant-scoped repository method cannot be called
  * without its scope. Forgetting it is a programming error, not a data leak.
  */
 function requireScope(restaurantId) {
