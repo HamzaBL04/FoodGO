@@ -16,7 +16,7 @@ module.exports = [
       globals: { ...globals.node },
     },
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
       eqeqeq: ['error', 'always'],
       curly: ['error', 'multi-line'],
       'no-var': 'error',
@@ -34,7 +34,7 @@ module.exports = [
       globals: { ...globals.browser },
     },
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
       eqeqeq: ['error', 'always'],
       'no-var': 'error',
       'prefer-const': 'error',
