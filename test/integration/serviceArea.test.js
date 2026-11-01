@@ -16,7 +16,7 @@ const order = (seed) => ({
   paymentMethod: 'CASH_ON_DELIVERY',
 });
 
-test('FR-32: a restaurant cannot be created without a zone, or outside the service area', async () => {
+test('FR-32, BR-18: a restaurant cannot be created without a zone, or outside the service area', async () => {
   const { app } = createTestApp();
   const admin = await signIn(request, app, 'ADMIN', DEMO_ACCOUNTS.admin);
   const post = (body) => request(app).post('/api/v1/admin/restaurants').set('Authorization', admin).send(body);

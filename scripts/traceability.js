@@ -2,7 +2,7 @@
 
 /**
  * Generates docs/requirements/TRACEABILITY.md: for every functional
- * requirement (FR-01..FR-32) and business rule (BR-01..BR-17), the source
+ * requirement (FR-01..FR-32) and business rule (BR-01..BR-18), the source
  * files that implement it and the tests that check it, found by scanning
  * for the identifier. Run: npm run traceability
  */
@@ -34,6 +34,7 @@ const BR = {
   'BR-13': 'E-payment through supported providers', 'BR-14': 'Order status maintained throughout lifecycle',
   'BR-15': 'Customer information restricted to authorised parties', 'BR-16': 'Customer access is restaurant-specific and provisioned',
   'BR-17': 'Orders only when restaurant and workplace are in the service area (team decision, ADR-0007)',
+  'BR-18': 'A restaurant outside the service area cannot join (team decision, ADR-0007)',
 };
 
 function walk(dir) {
