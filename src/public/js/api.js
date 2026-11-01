@@ -10,19 +10,25 @@ export class ApiError extends Error {
   }
 }
 
+function requestInit(method, body, headers) {
+  const init = { method, credentials: 'same-origin', headers: { ...headers } };
+  if (body) {
+    init.headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(body);
+  }
+  return init;
+}
+
+function toApiError(status, data) {
+  const err = (data && data.error) || {};
+  return new ApiError(status, err.code || 'SYS-001', err.message || 'Something went wrong');
+}
+
 export async function api(path, { method = 'GET', body, headers = {} } = {}) {
-  const res = await fetch(API + path, {
-    method,
-    credentials: 'same-origin',
-    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  const res = await fetch(API + path, requestInit(method, body, headers));
   if (res.status === 204) return null;
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = data.error || {};
-    throw new ApiError(res.status, err.code || 'SYS-001', err.message || 'Something went wrong');
-  }
+  if (!res.ok) throw toApiError(res.status, data);
   return data;
 }
 
