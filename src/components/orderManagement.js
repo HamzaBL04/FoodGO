@@ -6,6 +6,7 @@ const { fromMillimes } = require('../domain/money');
 const { evaluateDeadline, localDateString } = require('../domain/deadline');
 const { ORDER_STATUS, transition, labelOf, allowedNext } = require('../domain/orderState');
 const { EVENTS } = require('./notificationComponent');
+const { createAuditor } = require('./audit');
 
 /**
  * Order Management component (SDD §2.3). The only component permitted to
@@ -13,6 +14,7 @@ const { EVENTS } = require('./notificationComponent');
  */
 function createOrderManagement({ repos, clock, customer, payments, notifications }) {
   const nowIso = () => clock.now().toISOString();
+  const audit = createAuditor({ repos, clock });
 
   // ---- views -------------------------------------------------------------
 
@@ -130,10 +132,7 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
       if (paymentStatus !== order.paymentStatus) {
         repos.orders.updatePaymentAndProject(repos.orders.findCurrentPayment(order.orderId), paymentStatus, null, nowIso());
       }
-      repos.platform.audit({
-        at: nowIso(), actorRole: 'CUSTOMER', actorId: customerId, restaurantId,
-        action: 'ORDER_SUBMITTED', entity: 'orders', entityId: order.orderId,
-      });
+      audit(principal, { restaurantId, action: 'ORDER_SUBMITTED', entity: 'orders', entityId: order.orderId });
       return order;
     });
 
@@ -153,15 +152,24 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
     return orderView(order);
   }
 
-  function listOwnOrders(principal) {
-    return repos.orders.listForCustomer(principal.subjectId).map((o) => orderView(o));
+  /**
+   * Builds views for many orders with two batch queries instead of two
+   * queries per order (N+1 removed; see the refactor report).
+   */
+  function orderViews(orders) {
+    const ids = orders.map((o) => o.orderId);
+    const items = repos.orders.listItemsForOrders(ids);
+    const assignments = repos.orders.listAssignmentsForOrders(ids);
+    return orders.map((o) => orderView(o, { items: items.get(o.orderId) || [], assignment: assignments.get(o.orderId) || null }));
   }
 
-  /** FR-15 / FR-16: the restaurant's queue for a service day, with verification info. */
-  function listRestaurantOrders(restaurantId, serviceDate) {
-    const date = serviceDate || localDateString(clock.now());
-    return repos.orders.listForRestaurant(restaurantId, date).map((o) => ({
-      ...orderView(o),
+  function listOwnOrders(principal) {
+    return orderViews(repos.orders.listForCustomer(principal.subjectId));
+  }
+
+  function queueEntry(o, view) {
+    return {
+      ...view,
       customer: {
         customerId: o.customerId,
         fullName: o.customerName,
@@ -170,7 +178,22 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
         eligible: o.customerEligible === 1,
       },
       allowedNext: allowedNext(o.status),
-    }));
+    };
+  }
+
+  /** FR-15 / FR-16: the restaurant's queue for a service day, with verification info. */
+  function listRestaurantOrders(restaurantId, serviceDate) {
+    const date = serviceDate || localDateString(clock.now());
+    const orders = repos.orders.listForRestaurant(restaurantId, date);
+    const views = orderViews(orders);
+    return orders.map((o, i) => queueEntry(o, views[i]));
+  }
+
+  /** One queue entry, without loading the whole day's board. */
+  function getRestaurantOrder(restaurantId, orderId) {
+    const o = repos.orders.findQueueEntry(restaurantId, orderId);
+    if (!o) throw new AppError('NOT-FOUND', 'Order not found');
+    return queueEntry(o, orderView(o));
   }
 
   function restaurantOrderOrThrow(restaurantId, orderId) {
@@ -202,13 +225,10 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
     const order = restaurantOrderOrThrow(restaurantId, orderId);
     repos.unitOfWork(() => {
       applyTransition(order, ORDER_STATUS.IN_PREPARATION, {});
-      repos.platform.audit({
-        at: nowIso(), actorRole: principal.role, actorId: principal.subjectId, restaurantId,
-        action: 'ORDER_IN_PREPARATION', entity: 'orders', entityId: orderId,
-      });
+      audit(principal, { restaurantId, action: 'ORDER_IN_PREPARATION', entity: 'orders', entityId: orderId });
     });
     publishStatus(order, ORDER_STATUS.IN_PREPARATION);
-    return listRestaurantOrders(restaurantId, order.serviceDate).find((o) => o.orderId === orderId);
+    return getRestaurantOrder(restaurantId, orderId);
   }
 
   return {
@@ -216,6 +236,7 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
     getOwnOrder,
     listOwnOrders,
     listRestaurantOrders,
+    getRestaurantOrder,
     restaurantOrderOrThrow,
     startPreparation,
     applyTransition,

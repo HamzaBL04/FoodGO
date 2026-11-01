@@ -5,6 +5,7 @@ const { newId } = require('../domain/ids');
 const { fromMillimes } = require('../domain/money');
 const { ORDER_STATUS, labelOf } = require('../domain/orderState');
 const { EVENTS } = require('./notificationComponent');
+const { createAuditor } = require('./audit');
 
 const ASSIGNMENT_STATUS = Object.freeze({ ASSIGNED: 'ASSIGNED', STARTED: 'STARTED', COMPLETED: 'COMPLETED' });
 
@@ -17,12 +18,9 @@ const ASSIGNMENT_STATUS = Object.freeze({ ASSIGNED: 'ASSIGNED', STARTED: 'STARTE
 function createDeliveryManagement({ repos, clock, orders, payments, notifications }) {
   const nowIso = () => clock.now().toISOString();
 
-  function audit(principal, restaurantId, action, entityId, detail) {
-    repos.platform.audit({
-      at: nowIso(), actorRole: principal.role, actorId: principal.subjectId, restaurantId,
-      action, entity: 'delivery_assignment', entityId, detail: detail ? JSON.stringify(detail) : null,
-    });
-  }
+  const writeAudit = createAuditor({ repos, clock });
+  const audit = (principal, restaurantId, action, entityId, detail) =>
+    writeAudit(principal, { restaurantId, action, entity: 'delivery_assignment', entityId, detail: detail || null });
 
   function publish(type, order, assignment, extra = {}) {
     notifications.publish(type, {
@@ -59,7 +57,7 @@ function createDeliveryManagement({ repos, clock, orders, payments, notification
     const assignment = repos.orders.findAssignmentForOrder(orderId);
     publish(EVENTS.DELIVERY_ASSIGNED, order, assignment, { status: ORDER_STATUS.ASSIGNED });
     publish(EVENTS.ORDER_STATUS_CHANGED, order, assignment, { status: ORDER_STATUS.ASSIGNED });
-    return orders.listRestaurantOrders(restaurantId, order.serviceDate).find((o) => o.orderId === orderId);
+    return orders.getRestaurantOrder(restaurantId, orderId);
   }
 
   /** FR-20 / BR-08: the query itself is scoped to this person. */
