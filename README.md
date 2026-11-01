@@ -34,6 +34,8 @@ npm run coverage     # tests + coverage report (CI requires >= 60 % lines)
 npm run lint         # ESLint
 ```
 
+**If `npm install` fails:** check `node -v` is 22 or newer. The SQLite driver ships prebuilt binaries for Windows, macOS and Linux; the project's `.npmrc` stops npm from trying to compile it, so no C++ toolchain is needed. If port 3000 is busy, run `PORT=3001 npm start` (PowerShell: `$env:PORT=3001; npm start`).
+
 API documentation: **http://localhost:3000/api/docs** (Swagger UI, from [`docs/api/openapi.yaml`](docs/api/openapi.yaml)).
 
 ## Demo credentials
