@@ -44,6 +44,11 @@ function staffRoutes({ components }) {
     res.json({ customer: rm.updateCustomer(req.principal, rid(req), req.params.customerId, req.valid) });
   });
 
+  // FR-31 (PROPOSED): AI-assisted demand forecast — advisory only.
+  router.get('/forecast', async (req, res) => {
+    res.json({ forecast: await components.forecast.getForecast(req.principal, rid(req)) });
+  });
+
   router.get('/delivery-personnel', (req, res) => res.json({ deliveryPersonnel: rm.listDeliveryPersonnel(rid(req)) }));
   router.post('/delivery-personnel', validate(schemas.deliveryPerson), (req, res) => {
     res.status(201).json({ deliveryPerson: rm.provisionDeliveryPerson(req.principal, rid(req), req.valid) });

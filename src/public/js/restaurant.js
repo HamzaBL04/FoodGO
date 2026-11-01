@@ -13,6 +13,7 @@ const loaders = {
   customers: loadCustomers,
   team: loadTeam,
   settings: loadSettings,
+  forecast: loadForecast,
 };
 const select = tabs((name) => {
   current = name;
@@ -232,6 +233,48 @@ $('#settings').addEventListener('submit', async (e) => {
     toast('Settings saved');
   } catch (err) { showError(err); }
 });
+
+// ---------- AI-assisted prep forecast (FR-31, advisory) ----------
+async function loadForecast() {
+  $('#forecast').innerHTML = '<p class="muted">Calculating the forecast…</p>';
+  try {
+    const { forecast: f } = await api(`${R}/forecast`);
+    const max = Math.max(1, ...f.dishes.map((d) => d.high));
+    const conf = { high: 'ok', medium: 'info', low: 'warn' };
+    $('#forecast').innerHTML = `
+      <h1>Prep forecast for ${esc(f.weekday)} ${esc(f.serviceDate)}</h1>
+      ${f.note ? `<p class="muted">${esc(f.note)}</p>` : ''}
+      <div class="grid-2">
+        <div class="panel">
+          <table class="data">
+            <tr><th>Dish</th><th class="num">Expected</th><th style="width:40%"></th><th class="num">Ordered so far</th><th>Confidence</th></tr>
+            ${f.dishes.map((d) => `<tr>
+              <td><strong>${esc(d.name)}</strong>${d.available ? '' : ' <span class="chip bad">Unavailable</span>'}</td>
+              <td class="num"><strong>${d.expected}</strong><br><span class="muted">${d.low}–${d.high}</span></td>
+              <td><div class="band" aria-hidden="true"><div class="range" style="left:${(d.low / max) * 100}%;width:${((d.high - d.low) / max) * 100}%"></div><div class="bar" style="width:${(d.expected / max) * 100}%;opacity:.85"></div></div></td>
+              <td class="num">${d.alreadyOrdered}</td>
+              <td><span class="chip ${conf[d.confidence]}">${esc(d.confidence)}</span></td>
+            </tr>`).join('')}
+            <tr><td><strong>Total</strong></td><td class="num"><strong>${f.totals.expected}</strong><br><span class="muted">${f.totals.low}–${f.totals.high}</span></td><td></td><td class="num">${f.totals.alreadyOrdered}</td><td></td></tr>
+          </table>
+        </div>
+        <div>
+          <div class="panel">
+            <h3>Advice for the kitchen</h3>
+            <div class="advisory">${esc(f.summary)}</div>
+            <p class="muted" style="margin-top:.75rem">${esc(f.advisory)} Written by: ${esc(f.summarySource)}.</p>
+          </div>
+          <div class="panel">
+            <h3>How reliable is it?</h3>
+            ${f.accuracy ? `<p>Over the last ${f.accuracy.days.length} service days the forecast was off by <strong>${f.accuracy.meanAbsoluteError} dishes a day</strong> on average (${f.accuracy.meanAbsolutePercentError}%).</p>` : '<p>Not enough history yet to measure accuracy.</p>'}
+            <p class="muted">${esc(f.method)} Based on ${f.historyDays} days with orders. It never changes orders or the menu.</p>
+          </div>
+        </div>
+      </div>`;
+  } catch (err) {
+    showError(err);
+  }
+}
 
 onLiveEvents((type, event) => {
   if (type === 'OrderSubmitted') toast(`New order ${event.orderId}`);

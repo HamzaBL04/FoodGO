@@ -52,6 +52,10 @@ function createOrderRepository(db) {
       JOIN organization org ON org.organization_id = c.organization_id
       WHERE a.delivery_person_id = ? AND a.restaurant_id = ?
       ORDER BY (a.status = 'COMPLETED'), a.assigned_at DESC LIMIT 50`),
+    dailyItemQuantities: db.prepare(`SELECT o.service_date, oi.menu_item_id, SUM(oi.quantity) AS quantity
+      FROM orders o JOIN order_item oi ON oi.order_id = o.order_id
+      WHERE o.restaurant_id = @restaurantId AND o.service_date >= @fromDate AND o.service_date < @toDate
+      GROUP BY o.service_date, oi.menu_item_id`),
     updateAssignment: db.prepare(`UPDATE delivery_assignment SET status = @status,
         started_at = COALESCE(@startedAt, started_at), completed_at = COALESCE(@completedAt, completed_at)
       WHERE assignment_id = @assignmentId AND restaurant_id = @restaurantId`),
@@ -98,6 +102,11 @@ function createOrderRepository(db) {
     listAssignmentsForPerson: (restaurantId, deliveryPersonId) => {
       requireScope(restaurantId);
       return mapRows(st.assignmentsForPerson.all(deliveryPersonId, restaurantId));
+    },
+    /** Forecast input: quantity sold per item per service day, [fromDate, toDate). */
+    dailyItemQuantities: (restaurantId, fromDate, toDate) => {
+      requireScope(restaurantId);
+      return mapRows(st.dailyItemQuantities.all({ restaurantId, fromDate, toDate }));
     },
     updateAssignment: (a) => {
       requireScope(a.restaurantId);
