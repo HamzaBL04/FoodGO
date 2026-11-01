@@ -15,7 +15,9 @@
     "test": "node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "coverage": "c8 --check-coverage --lines 60 --reporter=text --reporter=lcov --reporter=json-summary node --test --test-concurrency=1 \"test/**/*.test.js\"",
     "lint": "eslint .",
-    "traceability": "node scripts/traceability.js"
+    "traceability": "node scripts/traceability.js",
+    "metrics": "node scripts/metrics.js",
+    "benchmark": "node scripts/benchmark.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
