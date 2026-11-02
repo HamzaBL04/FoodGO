@@ -28,7 +28,7 @@ async function loadRestaurants() {
   try {
     const { restaurants } = await api('/admin/restaurants');
     $('#restaurants').innerHTML = `<tr><th>Name</th><th>Deadline</th><th>Status</th></tr>` + restaurants.map((r) =>
-      `<tr><td><strong>${esc(r.name)}</strong><br><span class="muted">${esc(r.address || '')}</span></td><td>${esc(r.orderingDeadline)}</td><td><span class="chip ok">${esc(r.status.toLowerCase())}</span></td></tr>`).join('');
+      `<tr><td><strong>${esc(r.name)}</strong><br><span class="muted">${esc([r.address, r.zone].filter(Boolean).join(' · '))}</span></td><td>${esc(r.orderingDeadline)}</td><td><span class="chip ok">${esc(r.status.toLowerCase())}</span></td></tr>`).join('');
     $('#staff-restaurant').innerHTML = restaurants.map((r) => `<option value="${esc(r.restaurantId)}">${esc(r.name)}</option>`).join('');
   } catch (err) {
     showError(err);

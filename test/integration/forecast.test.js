@@ -76,8 +76,8 @@ test('no history: the forecast says so instead of inventing numbers', async () =
 
 test('the forecast is restaurant-scoped and staff-only', async () => {
   const { app, seed } = createTestApp({ historyDays: 7 });
-  const campus = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.campusStaff);
-  assert.equal((await request(app).get(url(seed)).set('Authorization', campus)).status, 403);
+  const kramSnack = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.kramSnackStaff);
+  assert.equal((await request(app).get(url(seed)).set('Authorization', kramSnack)).status, 403);
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
   assert.equal((await request(app).get(url(seed)).set('Authorization', customer)).status, 403);
 });

@@ -6,6 +6,8 @@ Living summary of the Lab 4 Software Design Document ([full SDD](lab4-sdd/FoodGO
 
 FoodGO is a **layered, single-process web application** (SDD §2.1: layered architecture as the primary style, client–server for communication, MVC only in the presentation layer, events only for notification fan-out). Browsers load four static UIs (customer, restaurant, delivery, admin) that call a REST JSON API and listen to a Server-Sent Events stream. The API runs in one Node.js 22 process: middleware authenticates and scopes every request, business components apply the rules, and repositories persist to a local SQLite file. Third-party services (Tunisian e-payment, SMS/OTP, notifications, an optional LLM) sit behind adapters; today they are sandboxes because no provider has been selected (Q-22).
 
+FoodGO serves one area only, **Lac 3 / Zone Industrielle Le Kram** (FR-32, BR-17, [ADR-0007](decisions/0007-service-area-lac3-zi-kram.md)): restaurants and workplaces each carry its zone (`LAC3_ZI_KRAM`), and Order Management refuses an order unless both are inside the area (`src/domain/serviceArea.js`).
+
 The rule that shapes everything: **the platform coordinates, the restaurant delivers.** No component employs, schedules or equips a delivery person (BR-06, BR-07), and every restaurant-owned query carries the restaurant scope (BR-09, D-10).
 
 ## 2. Component diagram
@@ -66,7 +68,7 @@ Twelve SDD classes, one table each (SDD §4.1), plus platform tables (`session`,
 
 ```mermaid
 erDiagram
-  ORGANIZATION ||--o{ CUSTOMER : "works / studies at"
+  ORGANIZATION ||--o{ CUSTOMER : "works at (zone LAC3_ZI_KRAM)"
   CUSTOMER ||--o{ RESTAURANT_CUSTOMER : "membership (D-01)"
   RESTAURANT ||--o{ RESTAURANT_CUSTOMER : registers
   RESTAURANT ||--o{ RESTAURANT_STAFF : employs
@@ -82,11 +84,11 @@ erDiagram
   DELIVERY_ASSIGNMENT }o--|| DELIVERY_PERSON : "BR-08"
 ```
 
-Money is integer millimes; `orders.deadline_snapshot` freezes the deadline in force (D-04); migrations live in `src/db/migrations/` (001 idempotency key, 002 indexes).
+Money is integer millimes; `orders.deadline_snapshot` freezes the deadline in force (D-04); migrations live in `src/db/migrations/` (001 idempotency key, 002 indexes, 003 `service_zone` on `organization` and `restaurant`, FR-32).
 
 ## 5. Key flows
 
-- **UC-01 Place a morning pre-order** — one transaction (T1): membership → deadline gate (BR-01, ORDER-001) → availability (BR-02, ORDER-002) → order + items + payment row + deadline snapshot → commit → `OrderSubmitted` / `OrderConfirmed` events. A declined e-payment rolls the whole order back (PAY-001). [Sequence diagram](uml/sequence-uc01-place-order.png)
+- **UC-01 Place a morning pre-order** — one transaction (T1): membership → service area (BR-17, ORDER-003) → deadline gate (BR-01, ORDER-001) → availability (BR-02, ORDER-002) → order + items + payment row + deadline snapshot → commit → `OrderSubmitted` / `OrderConfirmed` events. A declined e-payment rolls the whole order back (PAY-001). [Sequence diagram](uml/sequence-uc01-place-order.png)
 - **UC-02 Assign and deliver** — T2 checks the courier belongs to the order's restaurant and stores the assignment before dispatch; T3 lets only the assignee confirm, completes the assignment, moves the order to DELIVERED and records cash. [Sequence diagram](uml/sequence-uc02-assign-deliver.png)
 - **UC-03 Payment status** — Strategy resolved at runtime; provider reached only through the adapter. [Sequence diagram](uml/sequence-uc03-payment.png)
 
@@ -104,7 +106,8 @@ The restaurant **Prep forecast** (FR-31, added when the team withdrew assumption
 
 - **Failure lifecycle is UNRESOLVED** (cancellation, restaurant rejection, failed delivery, refunds): not built; `OrderState` is the single extension point.
 - **Sandbox providers:** no real Tunisian payment or SMS provider yet (Q-22); demo mode shows the SMS code and is off by default in production.
-- **Delivery location** is the customer's registered organization (PROPOSED; Q-02).
+- **Delivery location** is the customer's registered organization and its zone (PROPOSED; Q-02).
+- **Service area** (ADR-0007): restaurants outside the area cannot join (team decision). Still open: staggered delivery windows and a traffic measure.
 - **Single process + SQLite** is deliberate for this scale (ADR-0002); revisit conditions are in SDD §2.1.4.
 - **Cash not collected** at confirmation leaves the payment PENDING; what happens next is a stakeholder decision.
 - **No deployment yet;** availability targets cannot be measured until there is one.

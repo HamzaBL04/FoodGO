@@ -4,6 +4,7 @@ const { AppError } = require('../domain/errors');
 const { newId } = require('../domain/ids');
 const { fromMillimes } = require('../domain/money');
 const { ORDER_STATUS, labelOf } = require('../domain/orderState');
+const { zoneLabel } = require('../domain/serviceArea');
 const { EVENTS } = require('./notificationComponent');
 const { createAuditor } = require('./audit');
 
@@ -70,6 +71,7 @@ function createDeliveryManagement({ repos, clock, orders, payments, notification
       orderStatusLabel: labelOf(a.orderStatus),
       customerName: a.customerName,
       destination: a.organizationName,
+      destinationZone: zoneLabel(a.organizationZone),
       total: fromMillimes(a.totalMillimes),
       paymentMethod: a.paymentMethod,
       paymentStatus: a.paymentStatus,
@@ -91,7 +93,7 @@ function createDeliveryManagement({ repos, clock, orders, payments, notification
   /**
    * FR-21 / BR-15: exactly the information needed to complete this delivery.
    * The delivery location representation is UNRESOLVED (Q-02); the customer's
-   * registered workplace or campus is shown as the destination (PROPOSED).
+   * registered workplace and its zone (FR-32) are shown as the destination (PROPOSED).
    */
   function getAssignmentDetail(principal, assignmentId) {
     const a = ownAssignmentOrThrow(principal, assignmentId);
@@ -106,8 +108,8 @@ function createDeliveryManagement({ repos, clock, orders, payments, notification
       startedAt: a.startedAt,
       completedAt: a.completedAt,
       order: { orderId: view.orderId, status: view.status, statusLabel: view.statusLabel, items: view.items, total: view.total },
-      pickup: { restaurantName: restaurant.name, address: restaurant.address },
-      customer: { fullName: c.fullName, phoneNumber: c.phoneNumber, destination: c.organizationName },
+      pickup: { restaurantName: restaurant.name, address: restaurant.address, zone: zoneLabel(restaurant.serviceZone) },
+      customer: { fullName: c.fullName, phoneNumber: c.phoneNumber, destination: c.organizationName, destinationZone: zoneLabel(c.organizationZone) },
       payment: {
         method: order.paymentMethod,
         status: order.paymentStatus,

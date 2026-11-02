@@ -33,7 +33,7 @@ Mapped to the CS 488 midterm instructions (submission checklist §5 and rubric �
 | `AI_CONTEXT.md` + per-tool configs | [../AI_CONTEXT.md](../AI_CONTEXT.md), [../CLAUDE.md](../CLAUDE.md), [../.github/copilot-instructions.md](../.github/copilot-instructions.md), [../.cursor/rules/project.mdc](../.cursor/rules/project.mdc) |
 | README header + generated structure tree | [../README.md](../README.md#project-structure) (`./scripts/update-structure.sh`) |
 | Architecture with diagrams | [architecture.md](architecture.md) |
-| ADRs beyond the first | [decisions/](decisions/) (0002–0006) |
+| ADRs beyond the first | [decisions/](decisions/) (0002–0007; 0007 = service area Lac 3 / Zone Industrielle Le Kram) |
 | Team workflow, PR and issue templates | [../CONTRIBUTING.md](../CONTRIBUTING.md), [../.github/](../.github/) |
 | Living docs | [CHANGELOG.md](CHANGELOG.md), [setup.md](setup.md), docs reminder hook + CI job |
 | **Setup Report** | [setup-report.md](setup-report.md) |

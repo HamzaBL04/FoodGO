@@ -82,9 +82,9 @@ test('PAY-002: provider unavailable', async () => {
 });
 
 test('BR-01 / FR-12 / FR-13: orders before the deadline are accepted, after it refused with ORDER-001', async () => {
-  const { app, seed, clock } = createTestApp(); // 08:00, Campus Bites closes 10:30
+  const { app, seed, clock } = createTestApp(); // 08:00, Kram Snack closes 10:30
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.nour.phone);
-  const body = { restaurantId: seed.campus.restaurantId, items: items(seed, 'campus'), paymentMethod: 'CASH_ON_DELIVERY' };
+  const body = { restaurantId: seed.kramSnack.restaurantId, items: items(seed, 'kramSnack'), paymentMethod: 'CASH_ON_DELIVERY' };
   clock.set('2026-11-02T10:29:00+01:00');
   assert.equal((await submit(app, auth, body)).status, 201, 'FR-12: accepted before the deadline');
   clock.set('2026-11-02T10:30:00+01:00');
@@ -96,15 +96,15 @@ test('BR-01 / FR-12 / FR-13: orders before the deadline are accepted, after it r
 test('D-04: changing the deadline does not change an order already placed', async () => {
   const { app, seed } = createTestApp();
   const customer = await signInCustomer(request, app, DEMO_ACCOUNTS.nour.phone);
-  const placed = await submit(app, customer, { restaurantId: seed.campus.restaurantId, items: items(seed, 'campus'), paymentMethod: 'CASH_ON_DELIVERY' });
+  const placed = await submit(app, customer, { restaurantId: seed.kramSnack.restaurantId, items: items(seed, 'kramSnack'), paymentMethod: 'CASH_ON_DELIVERY' });
   const snapshot = placed.body.order.deadlineSnapshot;
-  const staff = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.campusStaff);
-  await request(app).put(`/api/v1/restaurants/${seed.campus.restaurantId}/settings`).set('Authorization', staff)
+  const staff = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.kramSnackStaff);
+  await request(app).put(`/api/v1/restaurants/${seed.kramSnack.restaurantId}/settings`).set('Authorization', staff)
     .send({ orderingDeadline: '07:00', cashOnDeliveryEnabled: true, ePaymentEnabled: true }).expect(200);
   const again = await request(app).get(`/api/v1/customer/orders/${placed.body.order.orderId}`).set('Authorization', customer);
   assert.equal(again.body.order.deadlineSnapshot, snapshot);
   // ...but new orders now follow the new deadline
-  const late = await submit(app, customer, { restaurantId: seed.campus.restaurantId, items: items(seed, 'campus'), paymentMethod: 'CASH_ON_DELIVERY' });
+  const late = await submit(app, customer, { restaurantId: seed.kramSnack.restaurantId, items: items(seed, 'kramSnack'), paymentMethod: 'CASH_ON_DELIVERY' });
   assert.equal(late.body.error.code, 'ORDER-001');
 });
 
@@ -137,7 +137,7 @@ test('I-5: an item from another restaurant cannot be added to the order', async 
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.yasmine.phone);
   const res = await submit(app, auth, {
     restaurantId: seed.darLella.restaurantId,
-    items: [{ menuItemId: seed.campus.items[0].menuItemId, quantity: 1 }],
+    items: [{ menuItemId: seed.kramSnack.items[0].menuItemId, quantity: 1 }],
     paymentMethod: 'CASH_ON_DELIVERY',
   });
   assert.equal(res.status, 400);
@@ -147,7 +147,7 @@ test('I-5: an item from another restaurant cannot be added to the order', async 
 test('BR-04 / BR-16: a customer cannot order from a restaurant that did not register them', async () => {
   const { app, seed } = createTestApp();
   const auth = await signInCustomer(request, app, DEMO_ACCOUNTS.omar.phone);
-  const res = await submit(app, auth, { restaurantId: seed.campus.restaurantId, items: items(seed, 'campus'), paymentMethod: 'CASH_ON_DELIVERY' });
+  const res = await submit(app, auth, { restaurantId: seed.kramSnack.restaurantId, items: items(seed, 'kramSnack'), paymentMethod: 'CASH_ON_DELIVERY' });
   assert.equal(res.status, 403);
 });
 
@@ -205,11 +205,11 @@ test('FR-15 / BR-09: the order appears in its restaurant queue only', async () =
   const queue = await request(app).get(`/api/v1/restaurants/${seed.darLella.restaurantId}/orders`).set('Authorization', lella);
   assert.equal(queue.body.orders.length, 1);
   assert.equal(queue.body.orders[0].orderId, placed.body.order.orderId);
-  assert.equal(queue.body.orders[0].customer.organizationName, 'MUST University'); // FR-16
-  const campus = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.campusStaff);
-  const other = await request(app).get(`/api/v1/restaurants/${seed.campus.restaurantId}/orders`).set('Authorization', campus);
+  assert.equal(queue.body.orders[0].customer.organizationName, 'Lac 3 Business Tower'); // FR-16
+  const kramSnack = await signIn(request, app, 'STAFF', DEMO_ACCOUNTS.kramSnackStaff);
+  const other = await request(app).get(`/api/v1/restaurants/${seed.kramSnack.restaurantId}/orders`).set('Authorization', kramSnack);
   assert.equal(other.body.orders.length, 0);
-  const sneaky = await request(app).get(`/api/v1/restaurants/${seed.darLella.restaurantId}/orders`).set('Authorization', campus);
+  const sneaky = await request(app).get(`/api/v1/restaurants/${seed.darLella.restaurantId}/orders`).set('Authorization', kramSnack);
   assert.equal(sneaky.status, 403);
 });
 

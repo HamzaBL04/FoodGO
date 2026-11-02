@@ -30,6 +30,7 @@ npm run traceability   # regenerate docs/requirements/TRACEABILITY.md
 ## Project-specific guidance
 
 - Demo accounts are in the README; demo mode returns the SMS code in `/auth/otp/request` (off when `NODE_ENV=production`).
-- Tests that depend on the deadline use `createTestApp({ at: '…' })`; Campus Bites closes at 10:30, Dar Lella at 23:30.
+- Tests that depend on the deadline use `createTestApp({ at: '…' })`; Kram Snack closes at 10:30, Dar Lella at 23:30.
 - New order states need a stakeholder decision first — do not add CANCELLED/REJECTED/FAILED on your own.
+- FoodGO serves one area only, Lac 3 / Zone Industrielle Le Kram (one zone, code `LAC3_ZI_KRAM`, ADR-0007). New restaurants and workplaces need that zone; don't add areas without a new ADR.
 - Keep the AI forecast advisory and free of customer data (there is a test for the prompt).

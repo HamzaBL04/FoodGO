@@ -5,6 +5,10 @@ const { newId } = require('../domain/ids');
 const { toMillimes } = require('../domain/money');
 const { menuItemView, restaurantSettingsView } = require('./presenters');
 const { createAuditor } = require('./audit');
+const { zoneLabel } = require('../domain/serviceArea');
+
+/** FR-32: the zone code plus its display name. */
+const organizationView = (o) => o && { ...o, zone: zoneLabel(o.serviceZone) };
 
 /**
  * Restaurant Management component (SDD §2.3): menus and availability,
@@ -97,21 +101,22 @@ function createRestaurantManagement({ repos, clock, auth, sms }) {
   // ---- Organizations (FR-04, D-06) ------------------------------------------
 
   function listOrganizations() {
-    return repos.customers.listOrganizations();
+    return repos.customers.listOrganizations().map(organizationView);
   }
 
-  function createOrganization(principal, { name, type }) {
+  /** FR-32 / BR-17: a workplace is added only with its zone inside the service area (schema enforces the list). */
+  function createOrganization(principal, { name, type, serviceZone }) {
     if (repos.customers.findOrganizationByName(name)) throw new AppError('VAL-001', 'This organization already exists');
     const organizationId = newId('org');
-    repos.customers.insertOrganization({ organizationId, name, type });
+    repos.customers.insertOrganization({ organizationId, name, type, serviceZone });
     audit(principal, principal.restaurantId, 'ORGANIZATION_CREATED', 'organization', organizationId);
-    return repos.customers.findOrganization(organizationId);
+    return organizationView(repos.customers.findOrganization(organizationId));
   }
 
   // ---- Customers: in-person registration and verification ------------------
 
   function listCustomers(restaurantId) {
-    return repos.customers.listMembers(restaurantId).map((m) => ({ ...m, eligible: m.eligible === 1 }));
+    return repos.customers.listMembers(restaurantId).map((m) => ({ ...m, organizationZone: zoneLabel(m.organizationZone), eligible: m.eligible === 1 }));
   }
 
   /**
@@ -150,7 +155,7 @@ function createRestaurantManagement({ repos, clock, auth, sms }) {
     const m = repos.customers.findMemberDetail(restaurantId, customerId);
     if (!m) throw new AppError('NOT-FOUND', 'Customer not registered at this restaurant');
     const { credentialRef: _hidden, ...view } = m;
-    return { ...view, eligible: m.eligible === 1 };
+    return { ...view, organizationZone: zoneLabel(m.organizationZone), eligible: m.eligible === 1 };
   }
 
   /** FR-17 / BR-04: this restaurant's eligibility decision, stored on the membership. */

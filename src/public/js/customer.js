@@ -29,7 +29,7 @@ async function loadRestaurants() {
       ? `<h1>Where would you like lunch from today?</h1>` + restaurants.map((r) => `
         <button class="restaurant-card" data-id="${esc(r.restaurantId)}">
           <h3>${esc(r.name)}</h3>
-          <p class="muted">${esc(r.address || '')}</p>
+          <p class="muted">${esc([r.address, r.zone].filter(Boolean).join(' · '))}</p>
           ${sunTrack(r)}
         </button>`).join('')
       : `<div class="empty"><h2>No restaurant yet</h2><p>Ask a restaurant to register you in person. You will then see it here.</p></div>`;

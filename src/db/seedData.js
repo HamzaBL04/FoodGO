@@ -10,7 +10,7 @@ const { localDateString, addDays, deadlineInstant } = require('../domain/deadlin
 const DEMO_ACCOUNTS = Object.freeze({
   admin: { identity: 'admin@foodgo.tn', password: 'Admin#2026' },
   darLellaStaff: { identity: 'staff@darlella.tn', password: 'Staff#2026' },
-  campusStaff: { identity: 'staff@campusbites.tn', password: 'Staff#2026' },
+  kramSnackStaff: { identity: 'staff@kramsnack.tn', password: 'Staff#2026' },
   karim: { identity: 'karim.d', password: 'Delivery#2026' },
   amine: { identity: 'amine.b', password: 'Delivery#2026' },
   sami: { identity: 'sami.c', password: 'Delivery#2026' },
@@ -34,11 +34,13 @@ function mulberry32(seed) {
 
 const hash = (pw) => bcrypt.hashSync(pw, config.bcryptRounds);
 
+// FR-32 / BR-17: every demo workplace is in Lac 3 / Zone Industrielle Le Kram.
+// The names are fictional.
 function seedOrganizations(repos) {
   const orgs = {
-    must: { organizationId: newId('org'), name: 'MUST University', type: 'CAMPUS' },
-    lac2: { organizationId: newId('org'), name: 'Lac 2 Tech Park', type: 'WORKPLACE' },
-    ennasr: { organizationId: newId('org'), name: 'Ennasr Business Center', type: 'WORKPLACE' },
+    lac3Tower: { organizationId: newId('org'), name: 'Lac 3 Business Tower', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' },
+    lac3TechHub: { organizationId: newId('org'), name: 'Lac 3 Tech Hub', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' },
+    kramTextile: { organizationId: newId('org'), name: 'Kram Textile Works', type: 'WORKPLACE', serviceZone: 'LAC3_ZI_KRAM' },
   };
   Object.values(orgs).forEach((o) => repos.customers.insertOrganization(o));
   return orgs;
@@ -55,9 +57,9 @@ const MENUS = {
     ['Makloub thon fromage', 'Folded flatbread, tuna and cheese', 7.5, 6],
     ['Citronnade', 'Fresh lemonade with mint', 3, 7],
   ],
-  campus: [
+  kramSnack: [
     ['Chapati thon', 'Chapati with tuna, egg and harissa', 5.5, 9],
-    ['Baguette farcie', 'Stuffed baguette, the student favourite', 6, 8],
+    ['Baguette farcie', 'Stuffed baguette, the factory-floor favourite', 6, 8],
     ['Pizza margherita', 'Individual pizza, tomato and mozzarella', 9, 5],
     ['Salade tunisienne', 'Tomato, cucumber, onion, tuna', 5, 4],
     ["Jus d'orange", 'Freshly squeezed', 3.5, 6],
@@ -65,7 +67,7 @@ const MENUS = {
   ],
 };
 
-function seedRestaurant(repos, { name, deadline, address, menu }) {
+function seedRestaurant(repos, { name, deadline, address, zone, menu }) {
   const restaurantId = newId('rst');
   repos.restaurants.insert({
     restaurantId,
@@ -74,6 +76,7 @@ function seedRestaurant(repos, { name, deadline, address, menu }) {
     cashOnDeliveryEnabled: 1,
     ePaymentEnabled: 1,
     address,
+    serviceZone: zone,
   });
   const menuId = newId('menu');
   repos.restaurants.insertMenu(menuId, restaurantId);
@@ -229,14 +232,16 @@ function seedDemoData(repos, { clock, historyDays = 28 } = {}) {
     const darLella = seedRestaurant(repos, {
       name: 'Dar Lella',
       deadline: '23:30', // demo setting: open almost all day so the app can be tried any time
-      address: 'Rue du Lac Léman, Les Berges du Lac, Tunis',
+      address: 'Les Berges du Lac, Tunis',
+      zone: 'LAC3_ZI_KRAM',
       menu: MENUS.darLella,
     });
-    const campus = seedRestaurant(repos, {
-      name: 'Campus Bites',
+    const kramSnack = seedRestaurant(repos, {
+      name: 'Kram Snack',
       deadline: '10:30', // a real morning deadline, to see BR-01 refuse late orders
-      address: 'Avenue de la République, Tunis',
-      menu: MENUS.campus,
+      address: 'Le Kram, Tunis',
+      zone: 'LAC3_ZI_KRAM',
+      menu: MENUS.kramSnack,
     });
 
     repos.accounts.insertAdmin({
@@ -253,13 +258,13 @@ function seedDemoData(repos, { clock, historyDays = 28 } = {}) {
       fullName: 'Sonia Gharbi',
       credentialHash: hash(DEMO_ACCOUNTS.darLellaStaff.password),
     });
-    const campusStaffId = newId('stf');
+    const kramStaffId = newId('stf');
     repos.accounts.insertStaff({
-      staffId: campusStaffId,
-      restaurantId: campus.restaurantId,
-      identity: DEMO_ACCOUNTS.campusStaff.identity,
+      staffId: kramStaffId,
+      restaurantId: kramSnack.restaurantId,
+      identity: DEMO_ACCOUNTS.kramSnackStaff.identity,
       fullName: 'Mehdi Jaziri',
-      credentialHash: hash(DEMO_ACCOUNTS.campusStaff.password),
+      credentialHash: hash(DEMO_ACCOUNTS.kramSnackStaff.password),
     });
 
     const courier = (restaurant, key, fullName, phone) => {
@@ -276,15 +281,15 @@ function seedDemoData(repos, { clock, historyDays = 28 } = {}) {
     };
     const karimId = courier(darLella, 'karim', 'Karim Dridi', '+21650200300');
     const amineId = courier(darLella, 'amine', 'Amine Bouzid', '+21650200301');
-    const samiId = courier(campus, 'sami', 'Sami Chebbi', '+21650200302');
+    const samiId = courier(kramSnack, 'sami', 'Sami Chebbi', '+21650200302');
 
-    const yasmine = seedCustomer(repos, now, { fullName: 'Yasmine Ben Ali', phone: DEMO_ACCOUNTS.yasmine.phone, org: orgs.must });
-    const omar = seedCustomer(repos, now, { fullName: 'Omar Trabelsi', phone: DEMO_ACCOUNTS.omar.phone, org: orgs.lac2 });
-    const nour = seedCustomer(repos, now, { fullName: 'Nour Hammami', phone: DEMO_ACCOUNTS.nour.phone, org: orgs.ennasr });
+    const yasmine = seedCustomer(repos, now, { fullName: 'Yasmine Ben Ali', phone: DEMO_ACCOUNTS.yasmine.phone, org: orgs.lac3Tower });
+    const omar = seedCustomer(repos, now, { fullName: 'Omar Trabelsi', phone: DEMO_ACCOUNTS.omar.phone, org: orgs.lac3TechHub });
+    const nour = seedCustomer(repos, now, { fullName: 'Nour Hammami', phone: DEMO_ACCOUNTS.nour.phone, org: orgs.kramTextile });
     register(repos, now, darLella, yasmine, lellaStaffId);
-    register(repos, now, campus, yasmine, campusStaffId);
+    register(repos, now, kramSnack, yasmine, kramStaffId);
     register(repos, now, darLella, omar, lellaStaffId);
-    register(repos, now, campus, nour, campusStaffId);
+    register(repos, now, kramSnack, nour, kramStaffId);
 
     const regulars = [yasmine, omar];
     if (historyDays > 0) {
@@ -300,7 +305,7 @@ function seedDemoData(repos, { clock, historyDays = 28 } = {}) {
     return {
       orgs,
       darLella: { ...darLella, staffId: lellaStaffId, couriers: { karimId, amineId } },
-      campus: { ...campus, staffId: campusStaffId, couriers: { samiId } },
+      kramSnack: { ...kramSnack, staffId: kramStaffId, couriers: { samiId } },
       customers: { yasmine, omar, nour },
     };
   });

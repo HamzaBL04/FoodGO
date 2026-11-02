@@ -68,10 +68,12 @@
             <button type="submit">Register customer</button>
           </form>
           <form class="panel" id="add-org">
-            <h3>Missing workplace or campus?</h3>
+            <h3>Missing workplace?</h3>
+            <p class="hint">FoodGO delivers only to Lac 3 / Zone Industrielle Le Kram.</p>
             <div class="row">
               <label>Name <input type="text" name="name" required minlength="2"></label>
               <label>Type <select name="type"><option value="WORKPLACE">Workplace</option><option value="CAMPUS">Campus</option><option value="INSTITUTION">Institution</option></select></label>
+              <label>Zone <select name="serviceZone" required><option value="LAC3_ZI_KRAM">Lac 3 / Zone Industrielle Le Kram</option></select></label>
             </div>
             <button type="submit" class="secondary">Add organization</button>
           </form>

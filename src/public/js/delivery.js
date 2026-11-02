@@ -13,7 +13,7 @@ async function loadJobs() {
     const done = assignments.filter((a) => a.status === 'COMPLETED').slice(0, 5);
     const card = (a) => `<button class="job ${a.status === 'COMPLETED' ? 'done' : ''}" data-id="${esc(a.assignmentId)}">
         <div style="display:flex;justify-content:space-between;gap:1rem"><span class="order-id">${esc(a.orderId)}</span>${statusChip(a.orderStatus)}</div>
-        <div><strong>${esc(a.customerName)}</strong>, ${esc(a.destination)}</div>
+        <div><strong>${esc(a.customerName)}</strong>, ${esc(a.destination)}${a.destinationZone ? ` · ${esc(a.destinationZone)}` : ''}</div>
         <div class="muted">${a.paymentMethod === 'CASH_ON_DELIVERY' && a.paymentStatus !== 'PAID' ? `Collect ${tnd(a.total)} in cash` : 'Already paid'}</div>
       </button>`;
     $('#jobs').innerHTML = (active.length ? active.map(card).join('') : '<div class="empty"><h2>Nothing to deliver right now</h2><p>New assignments appear here automatically.</p></div>')
@@ -43,8 +43,8 @@ async function openJob(id) {
       <div style="display:flex;justify-content:space-between;align-items:baseline"><h1 class="order-id" style="font-size:2rem">${esc(a.order.orderId)}</h1>${statusChip(a.order.status)}</div>
       ${cash && a.status !== 'COMPLETED' ? `<div class="collect">Collect ${tnd(a.payment.amountToCollect)} in cash</div>` : ''}
       <dl class="facts panel">
-        <dt>Pick up at</dt><dd>${esc(a.pickup.restaurantName)}</dd><span class="muted">${esc(a.pickup.address || '')}</span>
-        <dt>Deliver to</dt><dd>${esc(a.customer.fullName)}</dd><span class="muted">${esc(a.customer.destination)}</span>
+        <dt>Pick up at</dt><dd>${esc(a.pickup.restaurantName)}</dd><span class="muted">${esc([a.pickup.address, a.pickup.zone].filter(Boolean).join(' · '))}</span>
+        <dt>Deliver to</dt><dd>${esc(a.customer.fullName)}</dd><span class="muted">${esc([a.customer.destination, a.customer.destinationZone].filter(Boolean).join(' · '))}</span>
         <dt>Phone</dt><dd><a href="tel:${esc(a.customer.phoneNumber)}">${esc(a.customer.phoneNumber)}</a></dd>
         <dt>In the bag</dt><dd style="font-size:1rem">${a.order.items.map((i) => `${i.quantity} × ${esc(i.name)}`).join('<br>')}</dd>
       </dl>

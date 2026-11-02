@@ -35,6 +35,8 @@
           <h3>Add a restaurant</h3>
           <label>Name <input type="text" name="name" required minlength="2"></label>
           <label>Address <input type="text" name="address"></label>
+          <label>Zone <span class="hint">the only area FoodGO serves</span>
+            <select name="serviceZone" required><option value="LAC3_ZI_KRAM">Lac 3 / Zone Industrielle Le Kram</option></select></label>
           <label>Daily ordering deadline <input type="time" name="orderingDeadline" value="10:30" required></label>
           <button type="submit">Add restaurant</button>
         </form>

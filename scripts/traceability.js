@@ -2,7 +2,7 @@
 
 /**
  * Generates docs/requirements/TRACEABILITY.md: for every functional
- * requirement (FR-01..FR-31) and business rule (BR-01..BR-16), the source
+ * requirement (FR-01..FR-32) and business rule (BR-01..BR-17), the source
  * files that implement it and the tests that check it, found by scanning
  * for the identifier. Run: npm run traceability
  */
@@ -23,6 +23,7 @@ const FR = {
   'FR-25': 'Select payment method', 'FR-26': 'Payment upon delivery where enabled', 'FR-27': 'Tunisian e-payment where integrated',
   'FR-28': 'Record payment status', 'FR-29': 'Platform provisions restaurant staff', 'FR-30': 'Restaurant provisions delivery personnel',
   'FR-31': 'AI-assisted demand forecast (PROPOSED, A-13 withdrawn)',
+  'FR-32': 'Service area: Lac 3 / Zone Industrielle Le Kram only (team decision, ADR-0007)',
 };
 const BR = {
   'BR-01': 'Submit before restaurant deadline', 'BR-02': 'Only available items orderable', 'BR-03': 'Restaurants manage their menus',
@@ -32,6 +33,7 @@ const BR = {
   'BR-10': 'Assignment before dispatch', 'BR-11': 'Delivery person confirms delivery', 'BR-12': 'Every order records payment method and status',
   'BR-13': 'E-payment through supported providers', 'BR-14': 'Order status maintained throughout lifecycle',
   'BR-15': 'Customer information restricted to authorised parties', 'BR-16': 'Customer access is restaurant-specific and provisioned',
+  'BR-17': 'Orders only when restaurant and workplace are in the service area (team decision, ADR-0007)',
 };
 
 function walk(dir) {

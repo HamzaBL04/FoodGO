@@ -6,6 +6,7 @@ classDiagram
     +name: String
     +type: OrgType
     +status: String
+    +serviceZone: ServiceZone
   }
   class Customer {
     +customerId: String
@@ -29,6 +30,11 @@ classDiagram
     +orderingDeadline: HH:MM
     +cashOnDeliveryEnabled: bool
     +ePaymentEnabled: bool
+    +serviceZone: ServiceZone
+  }
+  class ServiceZone {
+    <<enumeration>>
+    LAC3_ZI_KRAM
   }
   class RestaurantStaff {
     +staffId: String

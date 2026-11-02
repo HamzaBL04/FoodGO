@@ -45,7 +45,7 @@ info:
     | `NOT-FOUND` | 404 | Resource (or route) not found within the caller's scope. |
     | `ORDER-001` | 409 | Ordering deadline passed (BR-01). |
     | `ORDER-002` | 409 | A menu item is unavailable (BR-02). |
-    | `ORDER-003` | 422 | Order creation failed (restaurant not taking orders). |
+    | `ORDER-003` | 422 | Order creation failed (restaurant not taking orders, or restaurant/workplace outside the service area, BR-17). |
     | `PAY-001` | 402 | Payment failed / declined by the provider. |
     | `PAY-002` | 503 | Payment provider unavailable. |
     | `DEL-001` | 409 | Delivery operation or order status transition refused. |
@@ -82,7 +82,7 @@ tags:
   - name: Admin
     description: Platform administration (SDD §5.1.5) — restaurants, staff accounts, monitoring. ADMIN only.
   - name: Organizations
-    description: Workplaces, campuses and institutions customers belong to (FR-04). STAFF and ADMIN.
+    description: Workplaces customers belong to (FR-04), each inside the Lac 3 / Zone Industrielle Le Kram area (FR-32). STAFF and ADMIN.
   - name: Events
     description: Live order status stream over Server-Sent Events (FR-24).
   - name: Meta
@@ -368,7 +368,7 @@ paths:
                   phoneNumber: '+21698333444'
                   organization:
                     organizationId: org_3RX7K2PQ9MTB
-                    name: Lac 2 Tech Park
+                    name: Lac 3 Tech Hub
                     type: WORKPLACE
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -403,7 +403,8 @@ paths:
                 restaurants:
                   - restaurantId: rst_4H7KQ2M9XPTB
                     name: Dar Lella
-                    address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                    address: Les Berges du Lac, Tunis
+                    zone: Lac 3 / Zone Industrielle Le Kram
                     paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
                     orderingDeadline: '23:30'
                     orderingOpen: true
@@ -438,7 +439,8 @@ paths:
                 restaurant:
                   restaurantId: rst_4H7KQ2M9XPTB
                   name: Dar Lella
-                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  address: Les Berges du Lac, Tunis
+                  zone: Lac 3 / Zone Industrielle Le Kram
                   paymentMethods: [CASH_ON_DELIVERY, E_PAYMENT]
                   orderingDeadline: '23:30'
                   orderingOpen: true
@@ -807,7 +809,8 @@ paths:
                 settings:
                   restaurantId: rst_4H7KQ2M9XPTB
                   name: Dar Lella
-                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  address: Les Berges du Lac, Tunis
+                  serviceZone: LAC3_ZI_KRAM
                   orderingDeadline: '23:30'
                   cashOnDeliveryEnabled: true
                   ePaymentEnabled: true
@@ -855,7 +858,8 @@ paths:
                 settings:
                   restaurantId: rst_4H7KQ2M9XPTB
                   name: Dar Lella
-                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  address: Les Berges du Lac, Tunis
+                  serviceZone: LAC3_ZI_KRAM
                   orderingDeadline: '10:30'
                   cashOnDeliveryEnabled: true
                   ePaymentEnabled: false
@@ -1093,7 +1097,8 @@ paths:
                   - customerId: cus_9QW4T7KPMX2H
                     fullName: Omar Trabelsi
                     phoneNumber: '+21698333444'
-                    organizationName: Lac 2 Tech Park
+                    organizationName: Lac 3 Tech Hub
+                    organizationZone: Lac 3 / Zone Industrielle Le Kram
                     eligible: true
                     status: ACTIVE
                     registeredAt: '2026-11-01T09:12:44.103Z'
@@ -1142,7 +1147,8 @@ paths:
                   fullName: Omar Trabelsi
                   phoneNumber: '+21698333444'
                   organizationId: org_3RX7K2PQ9MTB
-                  organizationName: Lac 2 Tech Park
+                  organizationName: Lac 3 Tech Hub
+                  organizationZone: Lac 3 / Zone Industrielle Le Kram
                   organizationType: WORKPLACE
                   eligible: true
                   status: ACTIVE
@@ -1202,7 +1208,8 @@ paths:
                   fullName: Omar Trabelsi
                   phoneNumber: '+21698333444'
                   organizationId: org_3RX7K2PQ9MTB
-                  organizationName: Lac 2 Tech Park
+                  organizationName: Lac 3 Tech Hub
+                  organizationZone: Lac 3 / Zone Industrielle Le Kram
                   organizationType: WORKPLACE
                   eligible: true
                   status: ACTIVE
@@ -1257,7 +1264,8 @@ paths:
                   fullName: Omar Trabelsi
                   phoneNumber: '+21698333444'
                   organizationId: org_3RX7K2PQ9MTB
-                  organizationName: Lac 2 Tech Park
+                  organizationName: Lac 3 Tech Hub
+                  organizationZone: Lac 3 / Zone Industrielle Le Kram
                   organizationType: WORKPLACE
                   eligible: false
                   status: ACTIVE
@@ -1446,7 +1454,7 @@ paths:
       tags: [Organizations]
       operationId: listOrganizations
       summary: List organizations
-      description: Lists all workplaces, campuses and institutions, ordered by name (FR-04, D-06). STAFF or ADMIN.
+      description: Lists all workplaces with their zone, ordered by name (FR-04, D-06, FR-32). STAFF or ADMIN.
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1465,9 +1473,9 @@ paths:
                       $ref: '#/components/schemas/Organization'
               example:
                 organizations:
-                  - { organizationId: org_6TQ2MK9XRH4P, name: Ennasr Business Center, type: WORKPLACE, status: ACTIVE }
-                  - { organizationId: org_3RX7K2PQ9MTB, name: Lac 2 Tech Park, type: WORKPLACE, status: ACTIVE }
-                  - { organizationId: org_8KM4QT2XPR7H, name: MUST University, type: CAMPUS, status: ACTIVE }
+                  - { organizationId: org_6TQ2MK9XRH4P, name: Kram Textile Works, type: WORKPLACE, status: ACTIVE, serviceZone: LAC3_ZI_KRAM, zone: Lac 3 / Zone Industrielle Le Kram }
+                  - { organizationId: org_8KM4QT2XPR7H, name: Lac 3 Business Tower, type: WORKPLACE, status: ACTIVE, serviceZone: LAC3_ZI_KRAM, zone: Lac 3 / Zone Industrielle Le Kram }
+                  - { organizationId: org_3RX7K2PQ9MTB, name: Lac 3 Tech Hub, type: WORKPLACE, status: ACTIVE, serviceZone: LAC3_ZI_KRAM, zone: Lac 3 / Zone Industrielle Le Kram }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1478,7 +1486,7 @@ paths:
       tags: [Organizations]
       operationId: createOrganization
       summary: Create an organization
-      description: Creates a workplace, campus or institution; names are unique case-insensitively (FR-04, D-06). STAFF or ADMIN.
+      description: Creates a workplace, campus or institution inside the service area; names are unique case-insensitively (FR-04, D-06). `serviceZone` must be LAC3_ZI_KRAM, the only area served (FR-32, BR-17). STAFF or ADMIN.
       security:
         - bearerAuth: []
         - cookieAuth: []
@@ -1505,11 +1513,13 @@ paths:
               example:
                 organization:
                   organizationId: org_2XP7KM4QTR9H
-                  name: Technopark El Ghazala
+                  name: Kram Port Logistics
                   type: WORKPLACE
                   status: ACTIVE
+                  serviceZone: LAC3_ZI_KRAM
+                  zone: Lac 3 / Zone Industrielle Le Kram
         '400':
-          description: VAL-001 — schema violation or an organization with this name already exists.
+          description: VAL-001 — schema violation (including a missing or out-of-area `serviceZone`, FR-32) or an organization with this name already exists.
           content:
             application/json:
               schema:
@@ -1555,7 +1565,8 @@ paths:
                     orderStatus: ASSIGNED
                     orderStatusLabel: Delivery person assigned
                     customerName: Omar Trabelsi
-                    destination: Lac 2 Tech Park
+                    destination: Lac 3 Tech Hub
+                    destinationZone: Lac 3 / Zone Industrielle Le Kram
                     total: 24.5
                     paymentMethod: CASH_ON_DELIVERY
                     paymentStatus: PENDING
@@ -1722,13 +1733,15 @@ paths:
               example:
                 restaurants:
                   - restaurantId: rst_9PX2KQ7MTR4H
-                    name: Campus Bites
+                    name: Kram Snack
                     status: ACTIVE
                     orderingDeadline: '10:30'
                     accessRules: ORGANIZATION_MEMBERS_ONLY
                     cashOnDeliveryEnabled: 1
                     ePaymentEnabled: 1
-                    address: Avenue de la République, Tunis
+                    address: Le Kram, Tunis
+                    serviceZone: LAC3_ZI_KRAM
+                    zone: Lac 3 / Zone Industrielle Le Kram
                   - restaurantId: rst_4H7KQ2M9XPTB
                     name: Dar Lella
                     status: ACTIVE
@@ -1736,7 +1749,9 @@ paths:
                     accessRules: ORGANIZATION_MEMBERS_ONLY
                     cashOnDeliveryEnabled: 1
                     ePaymentEnabled: 1
-                    address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                    address: Les Berges du Lac, Tunis
+                    serviceZone: LAC3_ZI_KRAM
+                    zone: Lac 3 / Zone Industrielle Le Kram
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1760,7 +1775,8 @@ paths:
             example:
               name: Dar Lella
               orderingDeadline: '23:30'
-              address: Rue du Lac Léman, Les Berges du Lac, Tunis
+              address: Les Berges du Lac, Tunis
+              serviceZone: LAC3_ZI_KRAM
       responses:
         '201':
           description: The created restaurant (raw record).
@@ -1781,7 +1797,8 @@ paths:
                   accessRules: ORGANIZATION_MEMBERS_ONLY
                   cashOnDeliveryEnabled: 1
                   ePaymentEnabled: 1
-                  address: Rue du Lac Léman, Les Berges du Lac, Tunis
+                  address: Les Berges du Lac, Tunis
+                  serviceZone: LAC3_ZI_KRAM
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1817,10 +1834,10 @@ paths:
                 staff:
                   - staffId: stf_3QM7KX2TPR9H
                     restaurantId: rst_9PX2KQ7MTR4H
-                    identity: staff@campusbites.tn
+                    identity: staff@kramsnack.tn
                     fullName: Mehdi Jaziri
                     status: ACTIVE
-                    restaurantName: Campus Bites
+                    restaurantName: Kram Snack
                   - staffId: stf_8MZQ4RTK2HXA
                     restaurantId: rst_4H7KQ2M9XPTB
                     identity: staff@darlella.tn
@@ -1919,7 +1936,7 @@ paths:
                   ordersTotal: 412
                 restaurants:
                   - restaurantId: rst_9PX2KQ7MTR4H
-                    name: Campus Bites
+                    name: Kram Snack
                     today: {}
                   - restaurantId: rst_4H7KQ2M9XPTB
                     name: Dar Lella
@@ -2154,13 +2171,18 @@ components:
               value:
                 error: { code: DEL-001, message: An order cannot go from DELIVERED to ASSIGNED }
     OrderCreationFailed:
-      description: ORDER-003 — the restaurant is not taking orders (not ACTIVE).
+      description: ORDER-003 — the restaurant is not taking orders (not ACTIVE), or the restaurant or the customer's workplace is outside the service area (BR-17).
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-          example:
-            error: { code: ORDER-003, message: Restaurant is not taking orders }
+          examples:
+            notActive:
+              value:
+                error: { code: ORDER-003, message: Restaurant is not taking orders }
+            outsideServiceArea:
+              value:
+                error: { code: ORDER-003, message: FoodGO only takes orders in Lac 3 / Zone Industrielle Le Kram }
     PaymentFailed:
       description: PAY-001 — e-payment capture declined; the whole order is rolled back (BR-13).
       content:
@@ -2289,6 +2311,17 @@ components:
     OrganizationType:
       type: string
       enum: [WORKPLACE, CAMPUS, INSTITUTION]
+
+    ServiceZone:
+      type: string
+      enum: [LAC3_ZI_KRAM]
+      description: FoodGO serves one area only, Lac 3 / Zone Industrielle Le Kram (one zone, two names) — FR-32, BR-17, ADR-0007.
+
+    ZoneLabel:
+      type: string
+      nullable: true
+      description: Display name of the service zone ("Lac 3 / Zone Industrielle Le Kram"); null for rows created before migration 003.
+      example: Lac 3 / Zone Industrielle Le Kram
 
     # ------------------------------------------------------------ meta / auth
     Meta:
@@ -2465,7 +2498,7 @@ components:
 
     RestaurantSettings:
       type: object
-      required: [restaurantId, name, address, orderingDeadline, cashOnDeliveryEnabled, ePaymentEnabled, paymentMethods]
+      required: [restaurantId, name, address, serviceZone, orderingDeadline, cashOnDeliveryEnabled, ePaymentEnabled, paymentMethods]
       properties:
         restaurantId:
           type: string
@@ -2473,6 +2506,10 @@ components:
           type: string
         address:
           type: string
+          nullable: true
+        serviceZone:
+          allOf:
+            - $ref: '#/components/schemas/ServiceZone'
           nullable: true
         orderingDeadline:
           $ref: '#/components/schemas/Hhmm'
@@ -2501,7 +2538,7 @@ components:
     RestaurantRecord:
       type: object
       description: Raw restaurant record as returned by the admin interface (flags are 0/1 integers).
-      required: [restaurantId, name, status, orderingDeadline, accessRules, cashOnDeliveryEnabled, ePaymentEnabled, address]
+      required: [restaurantId, name, status, orderingDeadline, accessRules, cashOnDeliveryEnabled, ePaymentEnabled, address, serviceZone]
       properties:
         restaurantId:
           type: string
@@ -2524,10 +2561,16 @@ components:
         address:
           type: string
           nullable: true
+        serviceZone:
+          allOf:
+            - $ref: '#/components/schemas/ServiceZone'
+          nullable: true
+        zone:
+          $ref: '#/components/schemas/ZoneLabel'
 
     RestaurantCreateRequest:
       type: object
-      required: [name, orderingDeadline]
+      required: [name, orderingDeadline, serviceZone]
       properties:
         name:
           type: string
@@ -2540,6 +2583,8 @@ components:
           type: string
           maxLength: 200
           description: Trimmed.
+        serviceZone:
+          $ref: '#/components/schemas/ServiceZone'
 
     DeadlineInfo:
       type: object
@@ -2560,7 +2605,7 @@ components:
     CustomerRestaurant:
       allOf:
         - type: object
-          required: [restaurantId, name, address, paymentMethods]
+          required: [restaurantId, name, address, zone, paymentMethods]
           properties:
             restaurantId:
               type: string
@@ -2569,6 +2614,8 @@ components:
             address:
               type: string
               nullable: true
+            zone:
+              $ref: '#/components/schemas/ZoneLabel'
             paymentMethods:
               type: array
               items:
@@ -2589,7 +2636,7 @@ components:
     # ------------------------------------------------------------ customers / organizations
     Organization:
       type: object
-      required: [organizationId, name, type, status]
+      required: [organizationId, name, type, status, serviceZone, zone]
       properties:
         organizationId:
           type: string
@@ -2600,10 +2647,16 @@ components:
         status:
           type: string
           example: ACTIVE
+        serviceZone:
+          allOf:
+            - $ref: '#/components/schemas/ServiceZone'
+          nullable: true
+        zone:
+          $ref: '#/components/schemas/ZoneLabel'
 
     OrganizationCreateRequest:
       type: object
-      required: [name, type]
+      required: [name, type, serviceZone]
       properties:
         name:
           type: string
@@ -2612,6 +2665,8 @@ components:
           description: Trimmed; unique case-insensitively.
         type:
           $ref: '#/components/schemas/OrganizationType'
+        serviceZone:
+          $ref: '#/components/schemas/ServiceZone'
 
     CustomerProfile:
       type: object
@@ -2625,7 +2680,7 @@ components:
           $ref: '#/components/schemas/TunisianPhone'
         organization:
           type: object
-          required: [organizationId, name, type]
+          required: [organizationId, name, type, zone]
           properties:
             organizationId:
               type: string
@@ -2633,6 +2688,8 @@ components:
               type: string
             type:
               $ref: '#/components/schemas/OrganizationType'
+            zone:
+              $ref: '#/components/schemas/ZoneLabel'
 
     MembershipStatus:
       type: string
@@ -2640,7 +2697,7 @@ components:
 
     RestaurantCustomerSummary:
       type: object
-      required: [customerId, fullName, phoneNumber, organizationName, eligible, status, registeredAt]
+      required: [customerId, fullName, phoneNumber, organizationName, organizationZone, eligible, status, registeredAt]
       properties:
         customerId:
           type: string
@@ -2650,6 +2707,8 @@ components:
           $ref: '#/components/schemas/TunisianPhone'
         organizationName:
           type: string
+        organizationZone:
+          $ref: '#/components/schemas/ZoneLabel'
         eligible:
           type: boolean
           description: This restaurant's eligibility decision (BR-04).
@@ -2936,7 +2995,7 @@ components:
           properties:
             customer:
               type: object
-              required: [customerId, fullName, phoneNumber, organizationName, eligible]
+              required: [customerId, fullName, phoneNumber, organizationName, organizationZone, eligible]
               properties:
                 customerId:
                   type: string
@@ -2946,6 +3005,8 @@ components:
                   $ref: '#/components/schemas/TunisianPhone'
                 organizationName:
                   type: string
+                organizationZone:
+                  $ref: '#/components/schemas/ZoneLabel'
                 eligible:
                   type: boolean
             allowedNext:
@@ -2967,7 +3028,7 @@ components:
     Assignment:
       type: object
       description: One row of a delivery person's assignment list.
-      required: [assignmentId, orderId, status, orderStatus, orderStatusLabel, customerName, destination, total, paymentMethod, paymentStatus, assignedAt, completedAt]
+      required: [assignmentId, orderId, status, orderStatus, orderStatusLabel, customerName, destination, destinationZone, total, paymentMethod, paymentStatus, assignedAt, completedAt]
       properties:
         assignmentId:
           type: string
@@ -2984,6 +3045,8 @@ components:
         destination:
           type: string
           description: The customer's registered organization (PROPOSED, Q-02).
+        destinationZone:
+          $ref: '#/components/schemas/ZoneLabel'
         total:
           $ref: '#/components/schemas/MoneyTnd'
         paymentMethod:
@@ -3034,16 +3097,18 @@ components:
               $ref: '#/components/schemas/MoneyTnd'
         pickup:
           type: object
-          required: [restaurantName, address]
+          required: [restaurantName, address, zone]
           properties:
             restaurantName:
               type: string
             address:
               type: string
               nullable: true
+            zone:
+              $ref: '#/components/schemas/ZoneLabel'
         customer:
           type: object
-          required: [fullName, phoneNumber, destination]
+          required: [fullName, phoneNumber, destination, destinationZone]
           properties:
             fullName:
               type: string
@@ -3051,7 +3116,9 @@ components:
               $ref: '#/components/schemas/TunisianPhone'
             destination:
               type: string
-              description: The customer's registered workplace or campus (PROPOSED, Q-02).
+              description: The customer's registered workplace (PROPOSED, Q-02).
+            destinationZone:
+              $ref: '#/components/schemas/ZoneLabel'
         payment:
           type: object
           required: [method, status, amountToCollect]
@@ -3430,7 +3497,8 @@ components:
               customerId: cus_9QW4T7KPMX2H
               fullName: Omar Trabelsi
               phoneNumber: '+21698333444'
-              organizationName: Lac 2 Tech Park
+              organizationName: Lac 3 Tech Hub
+              organizationZone: Lac 3 / Zone Industrielle Le Kram
               eligible: true
             allowedNext: [IN_PREPARATION, ASSIGNED]
 
@@ -3458,7 +3526,8 @@ components:
             customerId: cus_9QW4T7KPMX2H
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
-            organizationName: Lac 2 Tech Park
+            organizationName: Lac 3 Tech Hub
+            organizationZone: Lac 3 / Zone Industrielle Le Kram
             eligible: true
           allowedNext: [ASSIGNED]
 
@@ -3492,7 +3561,8 @@ components:
             customerId: cus_9QW4T7KPMX2H
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
-            organizationName: Lac 2 Tech Park
+            organizationName: Lac 3 Tech Hub
+            organizationZone: Lac 3 / Zone Industrielle Le Kram
             eligible: true
           allowedNext: [OUT_FOR_DELIVERY]
 
@@ -3516,11 +3586,13 @@ components:
             total: 24.5
           pickup:
             restaurantName: Dar Lella
-            address: Rue du Lac Léman, Les Berges du Lac, Tunis
+            address: Les Berges du Lac, Tunis
+            zone: Lac 3 / Zone Industrielle Le Kram
           customer:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
-            destination: Lac 2 Tech Park
+            destination: Lac 3 Tech Hub
+            destinationZone: Lac 3 / Zone Industrielle Le Kram
           payment:
             method: CASH_ON_DELIVERY
             status: PENDING
@@ -3546,11 +3618,13 @@ components:
             total: 24.5
           pickup:
             restaurantName: Dar Lella
-            address: Rue du Lac Léman, Les Berges du Lac, Tunis
+            address: Les Berges du Lac, Tunis
+            zone: Lac 3 / Zone Industrielle Le Kram
           customer:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
-            destination: Lac 2 Tech Park
+            destination: Lac 3 Tech Hub
+            destinationZone: Lac 3 / Zone Industrielle Le Kram
           payment:
             method: CASH_ON_DELIVERY
             status: PENDING
@@ -3576,11 +3650,13 @@ components:
             total: 24.5
           pickup:
             restaurantName: Dar Lella
-            address: Rue du Lac Léman, Les Berges du Lac, Tunis
+            address: Les Berges du Lac, Tunis
+            zone: Lac 3 / Zone Industrielle Le Kram
           customer:
             fullName: Omar Trabelsi
             phoneNumber: '+21698333444'
-            destination: Lac 2 Tech Park
+            destination: Lac 3 Tech Hub
+            destinationZone: Lac 3 / Zone Industrielle Le Kram
           payment:
             method: CASH_ON_DELIVERY
             status: PAID

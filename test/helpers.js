@@ -8,7 +8,7 @@ const { createRepositories } = require('../src/repositories');
 const { fixedClock } = require('../src/domain/clock');
 const { seedDemoData } = require('../src/db/seedData');
 
-/** 08:00 Tunis time on a Monday — before Campus Bites' 10:30 deadline. */
+/** 08:00 Tunis time on a Monday — before Kram Snack's 10:30 deadline. */
 const MONDAY_8AM = '2026-11-02T08:00:00+01:00';
 
 function createTestData({ at = MONDAY_8AM, historyDays = 0 } = {}) {

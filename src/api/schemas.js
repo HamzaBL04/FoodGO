@@ -1,11 +1,14 @@
 'use strict';
 
 const { z } = require('zod');
+const { ZONE_CODES } = require('../domain/serviceArea');
 
 const phone = z.string().trim().regex(/^\+216\d{8}$/, 'phone number must look like +216XXXXXXXX');
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'must be HH:MM');
 const password = z.string().min(8, 'password must be at least 8 characters').max(128);
 const identity = z.string().trim().min(3).max(120);
+// FR-32 / BR-17: the Lac 3 / Zone Industrielle Le Kram area only (ADR-0007).
+const serviceZone = z.enum(ZONE_CODES, { message: 'FoodGO serves only Lac 3 / Zone Industrielle Le Kram (LAC3_ZI_KRAM)' });
 
 const schemas = {
   signIn: z.object({
@@ -20,6 +23,7 @@ const schemas = {
     name: z.string().trim().min(2).max(80),
     orderingDeadline: hhmm,
     address: z.string().trim().max(200).optional(),
+    serviceZone,
   }),
   provisionStaff: z.object({
     restaurantId: z.string().min(3),
@@ -60,6 +64,7 @@ const schemas = {
   organization: z.object({
     name: z.string().trim().min(2).max(80),
     type: z.enum(['WORKPLACE', 'CAMPUS', 'INSTITUTION']),
+    serviceZone,
   }),
   deliveryPerson: z.object({
     identity,
