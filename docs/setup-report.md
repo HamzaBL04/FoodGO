@@ -1,15 +1,15 @@
 # Lab 6 — Setup Report
 
 **Project:** FoodGO — pre-order lunch delivery for Lac 3 / Zone Industrielle Le Kram, to cut lunchtime traffic
-**Course:** CS 488 AI-First Software Engineering, Fall 2026 · **Date:** 1 Nov 2026
+**Course:** CS 488 AI-First Software Engineering, Fall 2026 · **Date:** 1 Nov 2026 · **Updated:** 2 Nov 2026 (team meeting)
 
 ## Repository and members
 
-- **Repo:** https://github.com/HamzaBL04/foodGO (private; the instructor is invited as a collaborator)
+- **Repo:** https://github.com/HamzaBL04/foodGO (public, so the instructor can open it without an invitation)
 
 | Member | GitHub username | Collaborator | First PR merged |
 |---|---|---|---|
-| Hamza Ben Labiedh | `HamzaBL04` (owner) | yes | yes — PRs #1–#12 (self-merged before protection); Lab 6 PR #13 awaits a teammate's review |
+| Hamza Ben Labiedh | `HamzaBL04` (owner) | yes | yes — PRs #1–#12 (self-merged before protection); #13–#18 approved and merged by teammates (see below) |
 | Ali Chamakh | _TODO_ | _TODO_ | _TODO (intro PR, 2 Nov)_ |
 | Mohamed Krid | _TODO_ | _TODO_ | _TODO (intro PR, 2 Nov)_ |
 
@@ -32,7 +32,9 @@ Our repository already existed when Lab 6 started: the midterm MVP had been buil
 |---|---|
 | Clone test (fresh folder, README only) | ✅ `git clone` → `./scripts/setup.sh` (hooks enabled) → `cp .env.example .env` → `git status` does **not** list `.env` → `npm install` (no compiler) → `npm start` serves the app on the port set in `.env`; `/api/docs` returns 200 |
 | Tests / lint on the branch | ✅ 119 tests pass, coverage 97.3 % of server code, 0 lint problems |
-| CI on the Lab 6 PR (#13) | see the PR checks |
+| CI on the Lab 6 PR (#13) | ✅ 3/3 checks green; approved and merged by `MohamedK17` on 2 Nov |
+| Teammate-reviewed PRs (2 Nov) | ✅ #13 Lab 6 (approved + merged by `MohamedK17`), #14 service area (`alich2871`), #15 Lab 5 + Lab 3 (`MohamedK17`), #16 Lab 3 (`MohamedK17`), #18 Lab 2 (`MohamedK17`) |
+| Branch protection | ✅ ruleset "protect main", active — ![Branch protection](images/branch-protection.png) · [exported rules](images/branch-protection-ruleset.json) |
 | Merged PR screenshot | ![Merged PR](images/merged-pr.png) — _TODO: add screenshot_ |
 | Green CI run screenshot | ![CI run](images/ci-green.png) — _TODO: add screenshot_ |
 
@@ -44,23 +46,25 @@ We configured one context file, [`AI_CONTEXT.md`](../AI_CONTEXT.md), and pointed
 
 ## Branch protection
 
-To be switched on by the repository owner in **Settings → Branches → Add branch protection rule** for `main` (the automation used for this setup is not allowed to change protection settings):
+**On since 2 Nov 2026**, set by the owner as the repository ruleset **"protect main"** (Settings → Rules → Rulesets), status **Active**, target: the default branch `main`:
 
-- ✅ Require a pull request before merging
-- ✅ Require approvals: **1**
+- ✅ Require a pull request before merging, with **1** approval
 - ✅ Require status checks to pass: `Lint + tests (Node 22)`, `Lint + tests (Node 24)`, `Docs reminder (never fails)`
-- ✅ Do not allow bypassing the above settings
+- ✅ Block force pushes and branch deletion
+- ✅ Bypass list **empty**: nobody, including the owner, can merge without a teammate's approval
 
-Once it is on, nobody, including the owner, can merge without a teammate's approval. Free GitHub accounts can only protect **public** repositories: use GitHub Pro (free with the GitHub Student Developer Pack) or make the repository public.
+Evidence: [screenshot](images/branch-protection.png) and the [exported ruleset](images/branch-protection-ruleset.json). A first draft listed a non-existent `lint` check, which would have blocked every PR forever; we removed it before saving.
 
 ## Still TODO before implementation continues
 
 1. **Ali and Mohamed** (team meeting, 2 Nov): accept the collaborator invitation, clone, run `./scripts/setup.sh`, then each open an intro PR adding their GitHub username to this report and the README team list; Hamza reviews theirs, they review each other's. Fill in the members table above.
 2. Add the two screenshots to `docs/images/` (a merged PR page and the green Actions run).
-3. **Turn on branch protection** for `main` as described above, and screenshot the rule page for this report.
-4. Invite the instructor (`aziz.souiai@musteducation.tn`) as a collaborator.
+3. ~~Turn on branch protection~~ — done 2 Nov (see above).
+4. ~~Invite the instructor~~ — not needed now that the repository is public; inviting `aziz.souiai@musteducation.tn` remains optional.
 5. Team code walkthrough so every member can explain the Sprint 1 code before the defence.
 
 ## Honest notes
 
-Sprint 1 (the MVP) and this setup were done by one member working with Claude; the other two members were not yet involved, which is why TODO 1 matters. The PRs before this one were merged without a second reviewer; with branch protection on, every future PR needs one.
+Sprint 1 (the MVP) and this setup were done by one member working with Claude; the other two members were not yet involved, which is why TODO 1 matters. PRs #1–#12 were merged without a second reviewer. From #13 on, every PR was approved by a teammate, and branch protection now enforces it.
+
+**What went wrong while merging (2 Nov).** PRs #13–#17 were a stack, each built on the one before. When a PR was merged without deleting its branch, the next PR still targeted that old branch: #16 (Lab 3) was merged into the Lab 5 branch and #17 (Lab 2) into the Lab 3 branch instead of `main`. Nothing was lost — #15 then carried Lab 5 and Lab 3 into `main`, and the Lab 2 commit was re-opened as #18 and merged. Lesson recorded in `CONTRIBUTING.md`: after merging a PR, delete its branch, and check that every PR's base is `main` before merging.
