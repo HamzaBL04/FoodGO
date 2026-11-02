@@ -10,6 +10,7 @@ All notable changes to FoodGO. Newest at the top. One line per change. Based on 
 - CI job "Docs reminder" (never fails).
 - Service area: FoodGO serves only Lac 3 / Zone Industrielle Le Kram (one area), to cut lunchtime traffic there (FR-32, BR-17, ADR-0007). Restaurants and workplaces carry a zone (migration 003); restaurants outside the area cannot join; orders outside the area are refused with ORDER-003; the area is shown to every role.
 
+- Lab 2 complete SRS in the Lab 2 template (`docs/lab2-srs/`), generated from the reviewed requirements, the Lab 3 worksheet and the test traceability; NFR-14 (compatibility) and NFR-15 (legal/compliance, unresolved) added by the Lab 2 validation checklist.
 - Lab 3 requirements-engineering practical session: worksheet (markdown + PDF) and SRS skeleton with revised Sections 4–5; joining rule numbered BR-18 (`docs/lab3-practical/`).
 - `scripts/md-to-pdf.js` embeds local images and can join several files into one PDF.
 - Lab 5 design practical session: filled-in handout (.docx), markdown worksheet, SDD Sections 1–2 skeleton, UC-15 forecast sequence diagram (`docs/lab5-design/`).

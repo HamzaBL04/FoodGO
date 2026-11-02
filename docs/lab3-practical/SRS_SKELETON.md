@@ -1,6 +1,6 @@
 # FoodGO — Software Requirements Specification (draft skeleton)
 
-**Lab 3, Step 6 deliverable.** Structure from Lab 2 §6 (IEEE 830 / ISO/IEC/IEEE 29148), Sections 1–7. As the lab asks, **Sections 4 and 5 are complete**: they are our Step 3 list after the Step 5 peer-review revisions. The other sections are short placeholders that point to the full specification ([`../lab3-specification/FoodGO_Software_Specification.pdf`](../lab3-specification/FoodGO_Software_Specification.pdf)).
+**Lab 3, Step 6 deliverable.** Structure from the Lab 2 SRS template (IEEE 830 / ISO/IEC/IEEE 29148), Sections 1–7. As the lab asks, **Sections 4 and 5 are complete**: they are our Step 3 list after the Step 5 peer-review revisions. The other sections are short placeholders. **The complete SRS (Lab 2) is [`../lab2-srs/FoodGO_SRS.md`](../lab2-srs/FoodGO_SRS.md)**; it is generated from Sections 4–5 of this file, so they always match.
 
 **Version:** 0.2 draft, 1 Nov 2026 · **Team:** Hamza Ben Labiedh, Ali Chamakh, Mohamed Krid
 
@@ -29,9 +29,9 @@
 - **Assumptions:** spec A-01–A-15, except A-13 (AI out of scope), withdrawn by the team on 1 Nov 2026.
 - **Resolved since the specification:** unresolved item 35 *Initial deployment area* → Lac 3 / Zone Industrielle Le Kram; item 10 *Delivery-area rules* → partly (one area; restaurants outside it cannot join). Both by ADR-0007.
 
-## 3. External interface requirements _(placeholder)_
+## 3. System features / use cases _(placeholder)_
 
-User interfaces per actor (spec §13); REST JSON API documented in `docs/api/openapi.yaml`; payment, SMS/OTP, notification and LLM providers behind adapters (provider choice still unresolved).
+Use-case diagram and the UC-01 / UC-04 descriptions: Lab 3 worksheet, Step 4. Full use-case register: complete SRS §3.
 
 ---
 
@@ -141,13 +141,15 @@ Targets are the specification's **Proposed** targets unless marked otherwise. To
 | NFR-11 | Availability | The system shall be available 99.5 % of each month during the service window. **The service window is still a business decision**, so this target cannot be tested yet. | Should | After deployment |
 | NFR-12 | Portability | **(rev.)** The system shall install and run on a fresh machine with a single install command and no external service. | Could | Fresh-clone check |
 | NFR-13 | Scalability | **(new, Proposed)** The system shall handle the morning ordering peak of the whole service area. Target numbers (restaurants, customers, orders per peak) are set after the Sprint 2 interviews. Serving another area requires a new ADR. | Should | Benchmark at the agreed numbers |
+| NFR-14 | Compatibility | **(new, Lab 2 validation)** The customer and delivery interfaces shall work on the current versions of Chrome, Safari and Firefox on phones, and the restaurant and admin interfaces on the same browsers on desktop. | Should | Manual check per release |
+| NFR-15 | Legal / compliance | **(new, Lab 2 validation)** The personal-data and e-payment obligations that apply in Tunisia shall be identified and met before production use. **Unresolved** (spec §7.11): which obligations apply is not yet decided. | Must (before production) | Compliance review |
 
 ---
 
-## 6. Use cases and models _(placeholder)_
+## 6. Requirements traceability matrix _(placeholder)_
 
-Use-case diagram and UC-01 / UC-04 descriptions: Lab 3 worksheet, Step 4. Full UC register: Lab 4 SDD, Appendix A. UML: `docs/uml/`.
+Complete SRS §6, and the generated code-and-test matrix in `docs/requirements/TRACEABILITY.md`.
 
 ## 7. Appendices _(placeholder)_
 
-Traceability matrix (`docs/requirements/TRACEABILITY.md`), unresolved items (spec Appendix A6, minus items 35 and part of 10), glossary (Section 1).
+Elicitation log (Lab 3 worksheet, Step 1), glossary (Section 1), unresolved items (spec Appendix A6, minus items 35 and part of 10).
