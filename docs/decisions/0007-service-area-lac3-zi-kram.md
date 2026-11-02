@@ -18,11 +18,11 @@ We have not measured the traffic yet. The problem statement comes from the team'
 
 1. **FoodGO operates in one area only: Lac 3 / Zone Industrielle Le Kram.** The product's purpose is stated as reducing lunchtime traffic there by moving lunch ordering to the morning.
 2. **FR-32:** every restaurant and every workplace (organization) records its zone. Today there is exactly one zone, `LAC3_ZI_KRAM`. The API refuses any other value (`VAL-001`), and so does the database (`CHECK` in migration `003_service_area.sql`).
-3. **Restaurants must be located inside the area to join FoodGO.** A restaurant outside it cannot join, even if it would deliver into the area (team decision, confirmed by Hamza on 1 Nov 2026).
+3. **BR-18: restaurants must be located inside the area to join FoodGO.** A restaurant outside it cannot join, even if it would deliver into the area (team decision, confirmed by Hamza on 1 Nov 2026). Numbered BR-18 after the Lab 3 peer review.
 4. **BR-17:** an order is accepted only when both the restaurant and the customer's workplace are inside the area. Otherwise it is refused with `ORDER-003`. This also catches rows created before the migration, which have no zone.
 5. The area name is shown wherever a place is shown: the customer's restaurant list, the staff order queue and customer list, and the delivery person's pickup and destination.
 
-**Why a zone field when there is only one area?** It lets the database and the API refuse places outside the area, and it keeps one obvious place to change if the team ever serves a second area. The zone list lives in `src/domain/serviceArea.js`. Adding an area needs a new ADR, then one line there and one in the migration's `CHECK`.
+**Why a zone field when there is only one area?** It lets the database and the API refuse places outside the area, and it keeps one obvious place to change if the team ever serves a second area. The zone list lives in `src/domain/serviceArea.js`. Adding an area needs a new ADR, then one line there and one in the migration's `CHECK`. That ADR must also decide whether a restaurant in one area may serve a workplace in another: today `assertInServiceArea` only checks that both are inside a served area, which is enough while there is one (noted by the Lab 5 peer review).
 
 ## Not decided (do not invent)
 
@@ -34,6 +34,7 @@ These are open questions for the team. The code deliberately does not enforce an
 ## Consequences
 
 - The product has a concrete problem, a concrete place and testable users, which strengthens the proposal and the demo.
+- This resolves the specification's unresolved item 35 (*initial deployment area*) and part of item 10 (*delivery-area rules*).
 - The Lab 3 specification and the Lab 4 SDD are earlier, submitted deliverables and are not rewritten. This ADR and FR-32/BR-17 narrow them. Where they say "offices and campuses", read "workplaces in Lac 3 / Zone Industrielle Le Kram".
 - The demo data was moved into the area: Dar Lella and Kram Snack (formerly "Campus Bites"), plus three fictional workplaces. The demo video was re-recorded.
 - The `CAMPUS` and `INSTITUTION` organization types are kept: a training centre or school inside the area is still a valid destination.

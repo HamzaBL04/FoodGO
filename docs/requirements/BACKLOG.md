@@ -54,11 +54,12 @@ Sorted by priority: Must first, then Should, then Could; within a priority, by d
 | 27 | US-24 | As **restaurant staff** I want a forecast of tomorrow's dishes so that I prepare the right quantities. | Per-dish expected quantity, range, confidence; accuracy shown; advice only, never changes orders; optional Claude summary. | FR-31 (PROPOSED), BG-03, BG-04 | Should | 8 | ✅ |
 | 28 | US-25 | As the **administrator** I want to monitor today's orders and security events. | Read-only monitor with audit trail. | BG-09, §15 | Should | 3 | ✅ |
 | 29 | US-31 | As the **team** we want the app deployed on a public host. | HTTPS, persistent volume for SQLite. | §7 availability | Should | 3 | 🔜 |
-| 30 | US-20 | As a **delivery person** I want to record failed deliveries. | — | Q-07, Q-20 | Could | 3 | ⛔ |
-| 31 | US-29 | As a **customer** I want to cancel an order before preparation. | — | Q-04–Q-06 | Could | 5 | ⛔ |
-| 32 | US-30 | As the **platform** we want real SMS and e-mail notifications. | Adapter swap only. | §5.2.2, Q-22 | Could | 5 | 🔜 |
+| 30 | US-33 | As a **developer** I want Order Management to expose intention-revealing transitions (`markAssigned`, `dispatch`, `markDelivered`) that load the assignment themselves. | The State guards (BR-10, BR-11) no longer trust a context built by the caller; `applyTransition` becomes private. Raised by the Lab 5 peer review. | BR-10, BR-11, BR-14 | Should | 3 | 🔜 |
+| 31 | US-20 | As a **delivery person** I want to record failed deliveries. | — | Q-07, Q-20 | Could | 3 | ⛔ |
+| 32 | US-29 | As a **customer** I want to cancel an order before preparation. | — | Q-04–Q-06 | Could | 5 | ⛔ |
+| 33 | US-30 | As the **platform** we want real SMS and e-mail notifications. | Adapter swap only. | §5.2.2, Q-22 | Could | 5 | 🔜 |
 
-**Sprint 1 velocity (midterm MVP):** 89 story points done out of 105 in the backlog (including US-32, added on 1 Nov 2026 when the team narrowed the service area, ADR-0007).
+**Sprint 1 velocity (midterm MVP):** 89 story points done out of 108 in the backlog (including US-32, added on 1 Nov 2026 when the team narrowed the service area, ADR-0007).
 
 ## Non-functional requirements
 

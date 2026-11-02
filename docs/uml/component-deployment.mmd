@@ -1,4 +1,5 @@
 %% FoodGO — Component and deployment diagram (SDD §2.2 layers, as built)
+%% Lab 5 revision: Admin component and the DM->Payment, OM->Customer, RM->Auth, RM->adapters edges added.
 flowchart TB
   subgraph Clients["Browsers (customer phone, restaurant desktop, delivery phone, admin)"]
     CUI["customer.html + customer.js"]
@@ -25,6 +26,7 @@ flowchart TB
       PC["Payment Component (Strategy)"]
       NC["Notification Component (Observer)"]
       FC["Forecast Component (AI, advisory)"]
+      ADM["Platform Administration"]
     end
     subgraph D["Data access layer"]
       REPO["Repositories + unitOfWork (scope required, D-10)"]
@@ -40,10 +42,13 @@ flowchart TB
   Clients -- "HTTPS JSON + SSE, cookie session" --> MW
   MW --> R1 & R2 & R3
   R1 & R2 & R3 --> B
-  AUTH & CUS & RM & OM & DM & PC & FC --> REPO
+  AUTH & CUS & RM & OM & DM & PC & FC & ADM --> REPO
+  OM --> CUS
   OM --> PC
+  DM --> PC
   OM & DM --> NC
   DM --> OM
-  PC & AUTH & NC & FC --> ADP
+  RM & ADM --> AUTH
+  PC & AUTH & NC & FC & RM --> ADP
   REPO --> DB
   ADP -.-> EXT1 & EXT2 & EXT3

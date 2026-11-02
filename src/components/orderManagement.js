@@ -130,12 +130,10 @@ function createOrderManagement({ repos, clock, customer, payments, notifications
           unitPriceMillimes: item.priceMillimes, // D-02 snapshot
         });
       }
-      // I-3: the payment row is created in the same transaction. For e-payment
-      // the capture happens here: if it fails, the whole order rolls back.
-      const paymentStatus = payments.recordAtCheckout(order);
-      if (paymentStatus !== order.paymentStatus) {
-        repos.orders.updatePaymentAndProject(repos.orders.findCurrentPayment(order.orderId), paymentStatus, null, nowIso());
-      }
+      // I-3: the payment row is created in the same transaction, and only the
+      // Payment component writes the status (D-03). For e-payment the capture
+      // happens here: if it fails, the whole order rolls back.
+      payments.recordAtCheckout(order);
       audit(principal, { restaurantId, action: 'ORDER_SUBMITTED', entity: 'orders', entityId: order.orderId });
       return order;
     });

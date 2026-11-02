@@ -24,11 +24,12 @@ flowchart TB
       AUTH[Auth & Access Control]
       CUS[Customer]
       RM[Restaurant Management]
-      OM["Order Management + OrderState (State)"]
+      OM["Order Management + OrderState (state machine)"]
       DM[Delivery Management]
       PC["Payment (Strategy)"]
       NC["Notifications (Observer)"]
       FC["Forecast (AI, advisory)"]
+      ADM[Platform Administration]
     end
     REPO["Repositories + unitOfWork (scope required)"]
     ADP["Adapters: payment · SMS/OTP · notifications · LLM"]
@@ -37,14 +38,17 @@ flowchart TB
   EXT[["E-payment · SMS · Anthropic API (sandboxes / optional)"]]
 
   Browser -- "JSON + SSE, cookie session" --> MW --> B
-  AUTH & CUS & RM & OM & DM & PC & FC --> REPO --> DB
+  AUTH & CUS & RM & OM & DM & PC & FC & ADM --> REPO --> DB
+  OM --> CUS
   OM --> PC
+  DM --> PC
   DM --> OM
   OM & DM --> NC
-  PC & AUTH & NC & FC --> ADP -.-> EXT
+  RM & ADM --> AUTH
+  PC & AUTH & NC & FC & RM --> ADP -.-> EXT
 ```
 
-Full UML set (use-case, class, three sequence diagrams, component/deployment) with Mermaid sources: [uml/](uml/README.md).
+Full UML set (use-case, class, four sequence diagrams, component/deployment) with Mermaid sources: [uml/](uml/README.md).
 
 ## 3. Key modules
 
@@ -54,11 +58,12 @@ Full UML set (use-case, class, three sequence diagrams, component/deployment) wi
 | Auth & Access Control | Password sign-in (staff, delivery, admin), SMS one-time code (customers), sessions, staff provisioning (FR-29) | `src/components/auth.js` |
 | Customer | My restaurants, menus, profile; membership check (BR-04, BR-16) | `src/components/customerComponent.js` |
 | Restaurant Management | Menu and availability, deadline and payment settings, in-person registration, eligibility, delivery team (FR-01–FR-08, FR-16–FR-18, FR-30) | `src/components/restaurantManagement.js` |
-| Order Management | Submission transaction T1, queue, status changes through the State pattern (FR-09–FR-15, BR-01, BR-02, BR-14) | `src/components/orderManagement.js`, `src/domain/orderState.js` |
+| Order Management | Submission transaction T1, queue, status changes through the `OrderState` transition table — a table-driven variant of the State pattern (FR-09–FR-15, BR-01, BR-02, BR-14) | `src/components/orderManagement.js`, `src/domain/orderState.js` |
 | Delivery Management | Assignment T2, scoped assignment list, start, confirmation T3 (FR-19–FR-23, BR-08, BR-10, BR-11) | `src/components/deliveryManagement.js` |
 | Payment | Strategy per method; Payment owns the status, the order holds a projection (FR-25–FR-28, D-03) | `src/components/paymentComponent.js` |
 | Notifications | Event bus, events after commit (D-08), BR-15 visibility for the live stream | `src/components/notificationComponent.js` |
 | Forecast | Demand forecast, backtest, optional LLM note (FR-31) | `src/components/forecastComponent.js`, `src/domain/forecast.js` |
+| Platform Administration | Restaurants, staff accounts, read-only monitoring and audit trail (FR-29, BG-09) | `src/components/admin.js` |
 | Data access | SQL, scope enforcement, transactions | `src/repositories/`, `src/db/` |
 | Adapters | Protocol translation to third parties only | `src/adapters/` |
 

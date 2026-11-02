@@ -10,11 +10,19 @@ All notable changes to FoodGO. Newest at the top. One line per change. Based on 
 - CI job "Docs reminder" (never fails).
 - Service area: FoodGO serves only Lac 3 / Zone Industrielle Le Kram (one area), to cut lunchtime traffic there (FR-32, BR-17, ADR-0007). Restaurants and workplaces carry a zone (migration 003); restaurants outside the area cannot join; orders outside the area are refused with ORDER-003; the area is shown to every role.
 
+- Lab 3 requirements-engineering practical session: worksheet (markdown + PDF) and SRS skeleton with revised Sections 4–5; joining rule numbered BR-18 (`docs/lab3-practical/`).
+- `scripts/md-to-pdf.js` embeds local images and can join several files into one PDF.
+- Lab 5 design practical session: filled-in handout (.docx), markdown worksheet, SDD Sections 1–2 skeleton, UC-15 forecast sequence diagram (`docs/lab5-design/`).
+
 ### Changed
 - Licence: MIT (from the starter template).
 - Creating a restaurant (admin) or a workplace (staff) now requires `serviceZone` (`LAC3_ZI_KRAM`, the only value).
 - Demo data moved into the service area: Dar Lella stays; "Campus Bites" renamed Kram Snack (staff sign-in `staff@kramsnack.tn`); fictional workplaces Lac 3 Business Tower, Lac 3 Tech Hub, Kram Textile Works. Run `npm run seed` to rebuild a local database.
+- UML revised after the Lab 5 peer review: Admin component and missing dependencies, control classes and forecast classes in the class diagram, sequence notation fixes; backlog story US-33 for intention-revealing order transitions.
 - Proposal (v1.1), backlog (US-32), README, guides, architecture, OpenAPI and the demo video describe the new positioning.
+
+### Fixed
+- Only the Payment component writes a payment status (D-03): the checkout row and the order's projection are written in one call; Order Management no longer writes it, and e-payment orders no longer write the row twice (found by the Lab 5 peer review).
 
 ## [0.1.0] — 2026-11-01 — Midterm MVP
 

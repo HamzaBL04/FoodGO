@@ -81,11 +81,12 @@ test('customer (unit): membership must be active and eligible (BR-04, BR-16)', (
 
 test('payment (unit): only enabled methods are accepted; cash is paid only when collected (FR-26, FR-28)', () => {
   const updates = [];
+  const inserted = [];
   const repos = {
     orders: {
       findCurrentPayment: () => ({ paymentId: 'p1', orderId: 'FG-1' }),
       updatePaymentAndProject: (p, status, ref) => updates.push({ status, ref }),
-      insertPayment: () => {},
+      insertPaymentAndProject: (p) => inserted.push(p),
     },
   };
   const payments = createPaymentComponent({ repos, clock, paymentAdapter: { capture: () => ({ providerReference: 'R' }) } });
@@ -97,6 +98,8 @@ test('payment (unit): only enabled methods are accepted; cash is paid only when 
   assert.equal(payments.recordAtDelivery(order, { cashCollected: true }), 'PAID');
   assert.deepEqual(updates, [{ status: 'PAID', ref: 'CASH-FG-1' }]);
   assert.equal(payments.recordAtCheckout({ ...order, paymentMethod: 'E_PAYMENT' }), 'PAID');
+  // D-03: the checkout row and its projection are written by Payment in one call.
+  assert.deepEqual(inserted.map((p) => [p.status, p.providerReference]), [['PAID', 'R']]);
 });
 
 test('delivery (unit): an order cannot go to another restaurant\'s courier or be assigned twice (I-8)', () => {

@@ -1,0 +1,36 @@
+%% UC-15 View the AI prep forecast — FR-31 (ADR-0004). Added after the Lab 5 peer review.
+sequenceDiagram
+  autonumber
+  actor S as Restaurant staff
+  participant API as /restaurants/:id/forecast (route)
+  participant AUTH as Auth & Access Control
+  participant FC as Forecast Component
+  participant FD as forecast model (domain)
+  participant DB as Repositories
+  participant LLM as LLM Adapter (optional)
+  participant AN as Anthropic API
+
+  S->>API: GET forecast
+  API->>AUTH: authenticate + requireRole(STAFF) + own restaurant scope
+  AUTH-->>API: principal
+  API->>FC: getForecast(principal, restaurantId)
+  FC->>DB: daily quantities per dish, last 35 days (aggregates only, no customer data)
+  DB-->>FC: rows
+  FC->>FD: weekday-weighted average + trend, range, confidence, 7-day backtest
+  FD-->>FC: dishes, totals, accuracy
+  FC->>FC: templateSummary(forecast)
+  alt ANTHROPIC_API_KEY set and history exists
+    FC->>LLM: complete(prompt with dish numbers only)
+    LLM->>AN: Messages API (8 s timeout)
+    alt answered
+      AN-->>LLM: ≤ 3 sentences
+      LLM-->>FC: summary
+    else error or timeout
+      AN-->>LLM: error
+      LLM-->>FC: error — keep the template summary, log it
+    end
+  end
+  FC->>DB: audit FORECAST_VIEWED (summary source)
+  FC-->>API: forecast + summary + "advice only"
+  API-->>S: 200 forecast
+  note over S,AN: Advice only: nothing here accepts orders or changes payments, eligibility or the menu.

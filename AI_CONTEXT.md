@@ -12,7 +12,7 @@
 **Name:** FoodGO
 **One-liner:** A pre-order lunch platform **only for Lac 3 / Zone Industrielle Le Kram** (Tunis; one area, two names): employees order before a restaurant-set morning deadline, and the restaurant's **own** delivery staff deliver at lunch.
 **Why it exists:** traffic in that area gets heavy at lunchtime because employees leave work at the same time to get food. Pre-ordering keeps them at their desks (team decision, [ADR-0007](docs/decisions/0007-service-area-lac3-zi-kram.md)).
-**Service area (FR-32, BR-17):** every restaurant and every workplace has a zone; there is exactly one, `LAC3_ZI_KRAM`. The list lives only in `src/domain/serviceArea.js` (plus the CHECK in migration 003). An order is refused unless both the restaurant and the workplace are inside the area. Restaurants outside the area cannot join FoodGO (team decision).
+**Service area (FR-32, BR-17):** every restaurant and every workplace has a zone; there is exactly one, `LAC3_ZI_KRAM`. The list lives only in `src/domain/serviceArea.js` (plus the CHECK in migration 003). An order is refused unless both the restaurant and the workplace are inside the area. Restaurants outside the area cannot join FoodGO (BR-18, team decision).
 **Primary users:** employees of companies in the area, restaurant staff there, the restaurant's delivery people, the platform administrator.
 **The AI-assisted component:** the restaurant **Prep forecast** (FR-31, PROPOSED): a weekday-weighted moving average of past orders, with a backtest of its own error, plus an *optional* Claude-written prep note when `ANTHROPIC_API_KEY` is set. It is **advice only**: it never accepts or refuses orders, changes payments, eligibility or the menu, and the prompt never contains customer data.
 
@@ -44,7 +44,7 @@ Design sources (read these before designing anything new):
 - `src/server.js` — start-up (seeds demo data on first run) · `src/app.js` — Express app · `src/context.js` — composition root (wires everything)
 - `src/api/` — **presentation layer**: `routes/*Routes.js`, `middleware.js` (authenticate, `requireRole`, `requireRestaurantScope`, `validate`), `schemas.js`, `errorHandler.js`
 - `src/components/` — **business logic**, one per spec module: `auth`, `customerComponent`, `restaurantManagement`, `orderManagement`, `deliveryManagement`, `paymentComponent`, `notificationComponent`, `forecastComponent`, `admin`, plus `presenters.js`, `audit.js`
-- `src/domain/` — pure rules: `orderState.js` (State pattern), `deadline.js`, `money.js`, `forecast.js`, `errors.js`, `ids.js`, `clock.js`
+- `src/domain/` — pure rules: `orderState.js` (table-driven state machine, a State-pattern variant), `deadline.js`, `money.js`, `forecast.js`, `errors.js`, `ids.js`, `clock.js`
 - `src/repositories/` — **data access**, the only place with SQL; `unitOfWork()` for transactions
 - `src/adapters/` — third-party boundaries: payment (sandbox), SMS/OTP (sandbox), notifications, LLM (Anthropic)
 - `src/db/` — `schema.sql`, `migrations/NNN_*.sql`, `seedData.js`, `seed.js`

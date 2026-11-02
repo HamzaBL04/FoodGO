@@ -1,4 +1,5 @@
 %% UC-02 Assign a delivery person and complete delivery — T2 + T3 (SDD Figure 4)
+%% Lab 5 peer review: checks drawn before T2 (as coded), return messages added.
 sequenceDiagram
   autonumber
   actor S as Restaurant staff
@@ -11,25 +12,34 @@ sequenceDiagram
   actor C as Customer
 
   S->>DM: assignOrder(orderId, deliveryPersonId)
+  DM->>DB: person belongs to the order's restaurant? (I-8, BR-06)
+  DM->>DB: order not already assigned?
   rect rgb(232, 240, 250)
     note over DM,DB: T2
-    DM->>DB: person belongs to the order's restaurant? (I-8, BR-06)
     DM->>DB: insert assignment (before dispatch, BR-10)
     DM->>OM: applyTransition(→ ASSIGNED, guard: assignment exists)
+    OM-->>DM: order ASSIGNED
   end
+  DM-->>S: order with delivery person
   DM-)EV: DeliveryAssigned
   EV-)D: live update (own assignments only)
   D->>DM: listMyAssignments() — scoped query (BR-08)
+  DM-->>D: my assignments
   D->>DM: startDelivery(assignmentId)
   DM->>OM: applyTransition(→ OUT_FOR_DELIVERY, guard: assignment STARTED)
+  OM-->>DM: order OUT_FOR_DELIVERY
+  DM-->>D: assignment STARTED
   DM-)EV: DeliveryStatusChanged
   EV-)C: "On the way"
   D->>DM: confirmDelivery(assignmentId, cashCollected)
   rect rgb(232, 245, 225)
     note over DM,DB: T3
     DM->>OM: applyTransition(→ DELIVERED, guard: actor is the assignee — BR-11)
+    OM-->>DM: order DELIVERED
     DM->>DB: complete assignment
     DM->>PAY: recordAtDelivery (UC-03)
+    PAY-->>DM: PAID / null
   end
+  DM-->>D: assignment COMPLETED
   DM-)EV: OrderStatusChanged, PaymentStatusChanged
   EV-)C: "Delivered"

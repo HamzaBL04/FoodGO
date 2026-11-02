@@ -1,4 +1,6 @@
 %% FoodGO — Class diagram (SDD §3.1, 12 domain classes) + key design classes.
+%% Lab 5 revision: control classes carry the behaviour (Order and Payment are records);
+%% RestaurantCustomer is an association class (Mermaid cannot draw the dashed link); forecast added (FR-31).
 classDiagram
   direction LR
   class Organization {
@@ -16,7 +18,7 @@ classDiagram
     +status: String
   }
   class RestaurantCustomer {
-    <<association>>
+    <<association class>>
     +restaurantId: String
     +customerId: String
     +credentialRef: String
@@ -27,6 +29,8 @@ classDiagram
   class Restaurant {
     +restaurantId: String
     +name: String
+    +status: String
+    +address: String
     +orderingDeadline: HH:MM
     +cashOnDeliveryEnabled: bool
     +ePaymentEnabled: bool
@@ -46,6 +50,8 @@ classDiagram
     +deliveryPersonId: String
     +restaurantId: String
     +identity: String
+    +fullName: String
+    +status: String
     -credentialHash: String
   }
   class Menu {
@@ -89,8 +95,38 @@ classDiagram
     +startedAt: DateTime
     +completedAt: DateTime
   }
+  class OrderManagement {
+    <<control>>
+    +submitOrder(principal, cart) Order
+    +startPreparation(principal, restaurantId, orderId) Order
+    +applyTransition(order, to, guardCtx) Order
+  }
+  class PaymentComponent {
+    <<control>>
+    +resolveStrategy(method) PaymentMethodStrategy
+    +recordAtCheckout(order) status
+    +recordAtDelivery(order, cashCollected) status
+  }
+  class NotificationComponent {
+    <<Subject>>
+    +publish(type, event)
+    +subscribe(listener)
+    +visibleTo(principal, event) bool
+  }
+  class ForecastComponent {
+    <<control>>
+    +getForecast(principal, restaurantId) Forecast
+    +buildForecast(restaurantId) Forecast
+    +templateSummary(forecast) String
+  }
+  class LLMAdapter {
+    <<Adapter>>
+    +enabled: bool
+    +model: String
+    +complete(prompt) String
+  }
   class OrderState {
-    <<State>>
+    <<State table>>
     +transition(from, to, ctx) status
     +allowedNext(status) list
   }
@@ -120,8 +156,14 @@ classDiagram
   Order "1" --> "1..*" Payment : I-3
   Order "1" --> "0..1" DeliveryAssignment : BR-10
   DeliveryAssignment "0..*" --> "1" DeliveryPerson : BR-08
-  Order ..> OrderState : status changes via
-  Payment ..> PaymentMethodStrategy : resolved at runtime
+  OrderManagement ..> OrderState : status changes via
+  OrderManagement ..> Order : creates / changes (only writer, BR-14)
+  OrderManagement ..> PaymentComponent : recordAtCheckout
+  OrderManagement ..> NotificationComponent : publish after commit (D-08)
+  PaymentComponent ..> PaymentMethodStrategy : resolved at runtime
+  PaymentComponent ..> Payment : owns status (D-03)
+  ForecastComponent ..> OrderItem : reads daily aggregates (no customer data)
+  ForecastComponent ..> LLMAdapter : optional summary (FR-31)
   PaymentMethodStrategy <|.. CashOnDeliveryStrategy
   PaymentMethodStrategy <|.. EPaymentStrategy
   EPaymentStrategy --> PaymentAdapter

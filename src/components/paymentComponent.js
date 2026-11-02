@@ -71,13 +71,14 @@ function createPaymentComponent({ repos, clock, paymentAdapter }) {
 
   /**
    * Inside T1: creates the order's first payment row (I-3) and applies the
-   * checkout step of the strategy. Returns the resulting status.
+   * checkout step of the strategy. Payment owns the status and writes the
+   * order's projection in the same call (D-03). Returns the resulting status.
    */
   function recordAtCheckout(order) {
     const strategy = resolveStrategy(order.paymentMethod);
     const result = strategy.atCheckout({ order });
     const at = clock.now().toISOString();
-    repos.orders.insertPayment({
+    repos.orders.insertPaymentAndProject({
       paymentId: newId('pay'),
       orderId: order.orderId,
       method: order.paymentMethod,
