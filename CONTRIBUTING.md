@@ -70,6 +70,7 @@ One logical change per commit. If AI helped, add a `Co-Authored-By:` trailer (fo
 - Keep PRs small. If you changed behaviour, update `docs/CHANGELOG.md` **in the same PR**; if you changed a route, update `docs/api/openapi.yaml`.
 - Notable design choice → add an ADR in `docs/decisions/` (copy `TEMPLATE.md`).
 - The reviewer checks: does it follow `AI_CONTEXT.md`? Is it tested? Does it only do what it says? Is the restaurant scope enforced?
+- **Before you click Merge, check the base branch** at the top of the PR ("wants to merge into `main`"). **After merging, click Delete branch** right away. With stacked PRs (one built on another), deleting the merged branch is what makes GitHub retarget the next PR to `main`; skipping it once sent two of our PRs into the wrong branch (see the Setup Report).
 
 ## 7. Using AI assistants responsibly
 
