@@ -14,6 +14,8 @@ jobs:
         node: [22, 24]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the docs reminder can diff commits
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
@@ -27,3 +29,13 @@ jobs:
         with:
           name: coverage
           path: coverage/
+
+  docs:
+    name: Docs reminder (never fails)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Docs reminder
+        run: bash scripts/check-docs.sh

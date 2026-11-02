@@ -1,0 +1,19 @@
+---
+description: Project rules for Cursor — points to the shared AI context.
+alwaysApply: true
+---
+
+# Cursor Project Rules — FoodGO
+
+The single source of truth is `AI_CONTEXT.md` at the repo root. Read it and follow it for the project summary, stack (Node 22.14+, Express 5, SQLite, plain ES-module frontend), structure and conventions.
+
+Key rules (full list in `AI_CONTEXT.md`):
+
+- Layers: routes → one component → repositories; only repositories issue SQL; only `orderManagement` changes order status.
+- Restaurant scope is a required argument for restaurant-owned data (BR-09, D-10).
+- Don't invent UNRESOLVED business rules; leave a `TODO:` instead.
+- Never hardcode secrets — use `.env` (gitignored). See `.env.example`.
+- No new dependency without team agreement; note it in the PR.
+- New features ship with tests naming their requirement IDs; update `docs/CHANGELOG.md` when behaviour changes.
+
+If this file and `AI_CONTEXT.md` disagree, `AI_CONTEXT.md` wins.
