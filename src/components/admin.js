@@ -15,7 +15,7 @@ function createAdminComponent({ repos, clock, auth }) {
     return repos.restaurants.listAll().map((r) => ({ ...r, zone: zoneLabel(r.serviceZone) }));
   }
 
-  /** FR-32 / BR-17: every restaurant is located in a service zone (the schema validates the list). */
+  /** FR-32 / BR-18: every restaurant is located in the service area; one outside it cannot join (the schema validates the zone). */
   function createRestaurant(admin, { name, orderingDeadline, address, serviceZone }) {
     if (!isValidDeadline(orderingDeadline)) throw new AppError('VAL-001', 'orderingDeadline must be HH:MM');
     const restaurantId = newId('rst');

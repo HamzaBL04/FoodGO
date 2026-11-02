@@ -9,6 +9,7 @@ Mapped to the CS 488 midterm instructions (submission checklist §5 and rubric �
 | **Backlog** (prioritised, MoSCoW, story points) + **NFRs** + AI elicitation prompt | [requirements/BACKLOG.md](requirements/BACKLOG.md) · [PDF](requirements/BACKLOG.pdf) |
 | Requirements traceability | [requirements/TRACEABILITY.md](requirements/TRACEABILITY.md) (generated: `npm run traceability`) |
 | Lab 3 — Software specification | [lab3-specification/](lab3-specification/) |
+| **Lab 3 — Requirements engineering practical session** (stakeholders, elicitation log, analysis table, final requirements, use cases, peer review, SRS skeleton §4–5) | [lab3-practical/LAB3_REQUIREMENTS_WORKSHEET.pdf](lab3-practical/LAB3_REQUIREMENTS_WORKSHEET.pdf) · [markdown](lab3-practical/LAB3_REQUIREMENTS_WORKSHEET.md) · [SRS skeleton](lab3-practical/SRS_SKELETON.md) |
 | Lab 4 — Software Design Document (architecture rationale) | [lab4-sdd/FoodGO_Software_Design_Document.pdf](lab4-sdd/FoodGO_Software_Design_Document.pdf) |
 | **Lab 5 — Design practical session** (methodology, components, classes, 2 sequences, patterns, peer review, SDD skeleton) | [lab5-design/Lab5_Design_Practical_Session_FoodGO.docx](lab5-design/Lab5_Design_Practical_Session_FoodGO.docx) · [markdown](lab5-design/LAB5_DESIGN_WORKSHEET.md) · [SDD §1–2](lab5-design/SDD_SKELETON_SECTIONS_1-2.md) |
 | **UML**: use-case, class, sequence ×4, component/deployment — images + Mermaid source | [uml/](uml/README.md) |
