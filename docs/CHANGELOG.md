@@ -5,6 +5,7 @@ All notable changes to FoodGO. Newest at the top. One line per change. Based on 
 ## [Unreleased]
 
 ### Added
+- AI-First Activity 1 (SRS with prompt engineering): 11 prompts run in fresh Claude sessions, raw outputs and comparisons (`docs/activity1-prompt-engineering/`).
 - Branch protection on `main` (ruleset "protect main": PR + 1 approval + 3 checks, no bypass), with evidence in the Setup Report; merge checklist in `CONTRIBUTING.md`.
 - Lab 6 workspace from the CS 488 starter template: `AI_CONTEXT.md` with per-tool AI configs (Claude, Copilot, Cursor), `CONTRIBUTING.md`, PR and issue templates, git hooks with a docs reminder, setup and structure scripts, `.env.example`, `docs/architecture.md`, `docs/setup.md`, ADRs 0001–0006, this changelog, Setup Report (ADR-0003).
 - `npm start`, `npm run dev` and `npm run seed` read an optional `.env` file.
