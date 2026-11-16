@@ -23,52 +23,18 @@
     </section>
 
     <section class="forms">
-      <h2>Customers</h2>
-      <p class="muted">Sign in with the phone number your restaurant registered. We send you a 6-digit code.</p>
-      <form id="otp-request">
-        <label>Phone number
-          <input type="tel" name="phoneNumber" autocomplete="tel" placeholder="+216 20 111 222" required>
-        </label>
-        <button type="submit">Send my code</button>
-      </form>
-      <form id="otp-verify" hidden>
-        <div class="democode" id="democode" hidden></div>
-        <label>6-digit code
-          <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="\d{6}" required>
-        </label>
-        <div class="row">
-          <button type="submit">Sign in</button>
-          <button type="button" class="secondary" id="otp-back">Use another number</button>
-        </div>
-      </form>
+      <h2>How do you use FoodGO?</h2>
+      <p class="muted">Choose the option that matches you. Each one opens its own sign-in page.</p>
 
-      <h2>Restaurant staff, delivery and admin</h2>
-      <form id="password-signin">
-        <label>I am
-          <select name="role">
-            <option value="STAFF">Restaurant staff</option>
-            <option value="DELIVERY">Delivery person</option>
-            <option value="ADMIN">Platform administrator</option>
-          </select>
-        </label>
-        <label>Email or username
-          <input type="text" name="identity" autocomplete="username" required>
-        </label>
-        <label>Password
-          <input type="password" name="password" autocomplete="current-password" required>
-        </label>
-        <button type="submit">Sign in</button>
-      </form>
+      <a class="choice-card" href="/signin-customer.html">
+        <h3>I'm ordering lunch</h3>
+        <p class="muted">Employees in Lac 3 / Zone Industrielle Le Kram</p>
+      </a>
 
-      <div class="demo" id="demo" hidden>
-        <strong>Demo accounts</strong>
-        <table>
-          <tr><td>Customer</td><td><code>+21620111222</code> Yasmine (2 restaurants)<br><code>+21698333444</code> Omar</td></tr>
-          <tr><td>Staff</td><td><code>staff@darlella.tn</code> / <code>Staff#2026</code></td></tr>
-          <tr><td>Delivery</td><td><code>karim.d</code> / <code>Delivery#2026</code></td></tr>
-          <tr><td>Admin</td><td><code>admin@foodgo.tn</code> / <code>Admin#2026</code></td></tr>
-        </table>
-      </div>
+      <a class="choice-card" href="/signin-staff.html">
+        <h3>I work with FoodGO</h3>
+        <p class="muted">Restaurant staff, delivery person or administrator</p>
+      </a>
     </section>
   </main>
   <script type="module" src="/js/signin.js"></script>

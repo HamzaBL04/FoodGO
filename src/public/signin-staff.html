@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FoodGO — Staff sign in</title>
+  <meta name="description" content="Pre-order your lunch in the morning, receive it at lunchtime.">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <main class="signin">
+    <section class="story">
+      <div>
+        <a class="wordmark" href="/">Food<span>GO</span></a>
+        <h1>Order in the morning. Eat on time.</h1>
+        <p>Lunch for offices in Lac 3 / Zone Industrielle Le Kram. Order in the morning, stay at your desk at noon, and skip the lunchtime traffic. Your restaurant cooks for the orders it already has, and its own delivery team brings lunch to you.</p>
+      </div>
+      <div class="day" aria-label="How a FoodGO day works">
+        <b>07:30</b><span>Pick your lunch from the restaurants that registered you</span>
+        <b>10:30</b><span>Ordering closes and the kitchen starts cooking</span>
+        <b>12:15</b><span>The restaurant's delivery person brings it to you</span>
+      </div>
+    </section>
+
+    <section class="forms">
+      <a class="change-link" href="/">← Ordering lunch? Change</a>
+      <h2>Restaurant staff, delivery and admin</h2>
+      <form id="password-signin">
+        <label>I am
+          <select name="role">
+            <option value="STAFF">Restaurant staff</option>
+            <option value="DELIVERY">Delivery person</option>
+            <option value="ADMIN">Platform administrator</option>
+          </select>
+        </label>
+        <label>Email or username
+          <input type="text" name="identity" autocomplete="username" required>
+        </label>
+        <label>Password
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Sign in</button>
+      </form>
+
+      <div class="demo" id="demo" hidden>
+        <strong>Demo accounts</strong>
+        <table>
+          <tr><td>Staff, Dar Lella</td><td><code>staff@darlella.tn</code> / <code>Staff#2026</code></td></tr>
+          <tr><td>Staff, Kram Snack</td><td><code>staff@kramsnack.tn</code> / <code>Staff#2026</code></td></tr>
+          <tr><td>Delivery</td><td><code>karim.d</code> / <code>Delivery#2026</code></td></tr>
+          <tr><td>Admin</td><td><code>admin@foodgo.tn</code> / <code>Admin#2026</code></td></tr>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="/js/signin.js"></script>
+</body>
+</html>
