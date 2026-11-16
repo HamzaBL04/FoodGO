@@ -5,9 +5,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-test('every role page and its script are served', async () => {
+test('every UI page and its script are served', async () => {
   const { app } = createTestApp();
-  for (const page of ['/', '/customer', '/restaurant', '/delivery', '/admin']) {
+  for (const page of ['/', '/signin-customer', '/signin-staff', '/customer', '/restaurant', '/delivery', '/admin']) {
     const res = await request(app).get(page);
     assert.equal(res.status, 200, page);
     assert.match(res.headers['content-type'], /text\/html/);
@@ -16,6 +16,27 @@ test('every role page and its script are served', async () => {
   for (const asset of ['/js/api.js', '/js/customer.js', '/css/app.css', '/fonts/ibm-plex-sans-latin-400-normal.woff2']) {
     assert.equal((await request(app).get(asset)).status, 200, asset);
   }
+});
+
+test('sign-in starts with a choice and splits customer from staff', async () => {
+  const { app } = createTestApp();
+  const home = await request(app).get('/');
+  assert.match(home.text, /href="\/signin-customer\.html"/);
+  assert.match(home.text, /href="\/signin-staff\.html"/);
+  assert.doesNotMatch(home.text, /id="otp-request"/);
+  assert.doesNotMatch(home.text, /id="password-signin"/);
+
+  const customer = await request(app).get('/signin-customer.html');
+  assert.match(customer.text, /id="otp-request"/);
+  assert.match(customer.text, /id="otp-verify"/);
+  assert.doesNotMatch(customer.text, /id="password-signin"/);
+  assert.match(customer.text, /href="\/"/);
+
+  const staff = await request(app).get('/signin-staff.html');
+  assert.match(staff.text, /id="password-signin"/);
+  assert.doesNotMatch(staff.text, /id="otp-request"/);
+  assert.doesNotMatch(staff.text, /id="otp-verify"/);
+  assert.match(staff.text, /href="\/"/);
 });
 
 test('security headers are set and the stack is not advertised', async () => {
