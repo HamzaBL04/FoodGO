@@ -8,6 +8,7 @@ Required by the CS 488 submission checklist: "AI usage log (tools used, prompts,
 |---|---|---|
 | Claude (agentic session in the Claude app, model family Claude Opus) | Anthropic | Implementation, tests, CI, UML (Mermaid), documentation, demo-video script, backlog draft |
 | Claude API (`claude-haiku-5-5`, optional at runtime) | Anthropic | **Inside the product**: writes the short prep note on the forecast screen when `ANTHROPIC_API_KEY` is set (FR-31) |
+| opencode with DeepSeek V4.1 Flash | opencode | Sign-in split implementation, tests, demo-script update and docs (16 Nov 2026) |
 | Course master prompts (Lab 3 elicitation and specification) | CS 488 course material | Lab 3 specification and Lab 4 SDD — completed by the team before this log; the team's own records for those labs apply |
 
 ## How "direct output" is flagged
@@ -16,7 +17,7 @@ Required by the CS 488 submission checklist: "AI usage log (tools used, prompts,
 - **Edited**: AI draft that a team member changed in substance.
 - **Human**: written or decided by a team member.
 
-Every AI-assisted commit carries a `Co-Authored-By: Claude` trailer, and every pull request description ends with an "AI disclosure" section. `git log --grep "Co-Authored-By: Claude"` lists them.
+Every AI-assisted commit carries a `Co-Authored-By:` trailer (for example `Claude` or `opencode`), and every pull request description ends with an "AI disclosure" section. `git log --grep "Co-Authored-By:"` lists them.
 
 ## Log
 
@@ -39,6 +40,7 @@ Every AI-assisted commit carries a `Co-Authored-By: Claude` trailer, and every p
 | 1 Nov 2026 | PR #16 Lab 3 practical session | (Lab 3 handout attached, no text; read as "work on this, part of the submission", like Lab 5.) | Worksheet (markdown + PDF), SRS skeleton with revised §4–5, BR-18 | Direct, then reviewed | Built from our own specification and the product-owner decisions; the **role-play interviews were not run** and are left for class with a guide. A fresh Claude agent acted as the reviewing team (Appendix B); its 7 findings were checked and fixed in the SRS skeleton |
 | 1 Nov 2026 | PR #15 Lab 5 design session | "Work on the Lab 5 design practical session (handout attached); it is part of the submission." | Filled-in handout `.docx`, markdown worksheet, SDD Sections 1–2, revised UML (class, component, UC-01/02/03) and new UC-15, payment-projection fix | Direct, then reviewed | No other team was available for the Step 6 swap, so a **fresh Claude agent acted as the reviewing team** (prompt in Appendix B); all 7 issues were checked against the code before being accepted. The other members review the worksheet on 2 Nov; instructor sign-off is still pending |
 | 1 Nov 2026 | PR #14 service area | "Narrow the product to Lac 3 and Zone Industrielle Le Kram, to avoid heavy lunchtime traffic there: record the decision, enforce it in code, move the demo data, update every document and the demo video." | ADR-0007, FR-32/BR-17, `src/domain/serviceArea.js`, migration 003, 9 tests, docs, re-recorded video | Direct, then corrected | **The service area and its purpose are Hamza's decision.** The AI first modelled Lac 3 and Zone Industrielle Le Kram as two zones; Hamza corrected it (prompt 8: they are the same zone) and it was remodelled as one area. The AI's reading that restaurants must also be inside the area was confirmed by Hamza (prompt 9) |
+| 16 Nov 2026 | Sign-in split | tool: opencode with DeepSeek V4.1 Flash. Prompt: split the shared sign-in page into a role-choice screen and separate customer/staff sign-in pages, keep the API and redirects unchanged, update the Playwright recorder and docs, then run lint/tests/coverage. | `src/public/index.html`, `signin-customer.html`, `signin-staff.html`, `js/signin.js`, `css/app.css`, `test/integration/webUi.test.js`, `demo/record-demo.js`, `docs/USER_GUIDE.md`, `README.md`, `docs/CHANGELOG.md`, `docs/architecture.md`, `AI_CONTEXT.md`, this log | Direct | No backend/API change. Demo customer is `+21620111222` because the prompt's `+21620000001` is not seeded. **Reviewed by: pending teammate review** (PR approval required) |
 
 ## Runtime AI (inside the product)
 

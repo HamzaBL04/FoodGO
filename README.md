@@ -39,7 +39,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:3000**. On first start the app creates a demo database with two restaurants, accounts and four weeks of order history. `npm run seed` resets it at any time.
+Open **http://localhost:3000** and choose **I'm ordering lunch** or **I work with FoodGO**; each card opens its own sign-in page. On first start the app creates a demo database with two restaurants, accounts and four weeks of order history. `npm run seed` resets it at any time.
 
 ```bash
 npm test             # 100+ unit and integration tests

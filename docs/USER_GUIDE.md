@@ -2,13 +2,13 @@
 
 FoodGO lets you order lunch in the morning from restaurants that registered you, and have it delivered at lunchtime by the restaurant's own delivery team.
 
-Open the app (for the local demo: http://localhost:3000). Everyone starts on the same sign-in page.
+Open the app (for the local demo: http://localhost:3000). The first screen asks how you use FoodGO: choose **I'm ordering lunch** if you are a customer, or **I work with FoodGO** for restaurant staff, delivery people and administrators. Each card opens its own sign-in page.
 
 ## Customers
 
 **Before you start:** a restaurant must register you in person (bring an ID). They record your name, phone number and workplace. FoodGO only delivers to workplaces in **Lac 3 / Zone Industrielle Le Kram**.
 
-1. **Sign in.** Enter your phone number (`+216…`) and tap **Send my code**. Type the 6-digit code you receive. In the demo no SMS is sent: the code is shown on screen and filled in for you.
+1. **Sign in.** Choose **I'm ordering lunch**, then enter your phone number (`+216…`) and tap **Send my code**. Type the 6-digit code you receive. In the demo no SMS is sent: the code is shown on screen and filled in for you.
 2. **Pick a restaurant.** You see only the restaurants that registered you. The bar under each name shows the ordering deadline and how much time is left.
 3. **Choose your dishes.** Tap **+** and **−** to set quantities. Dishes marked *Unavailable today* cannot be added. The bar at the bottom shows your item count and total.
 4. **Review and pay.** Tap **Review order**, check the lines and total, choose **Cash on delivery** or **E-payment**, then **Place order**. You get an order number such as `FG-7K2P9Q`.
@@ -18,7 +18,7 @@ If you miss the deadline, the app tells you ordering is closed for today. If a d
 
 ## Restaurant staff
 
-Sign in with your email and password, choosing **Restaurant staff**.
+Choose **I work with FoodGO**, then sign in with your email and password, choosing **Restaurant staff**.
 
 - **Today's orders** — a board with one column per stage. New orders appear on their own.
   - **Start preparing** moves an order to *Being prepared*.
@@ -31,7 +31,7 @@ Sign in with your email and password, choosing **Restaurant staff**.
 
 ## Delivery people
 
-Sign in with the username and password your restaurant gave you, choosing **Delivery person**.
+Choose **I work with FoodGO**, then sign in with the username and password your restaurant gave you, choosing **Delivery person**.
 
 1. **My deliveries** lists the orders assigned to you. New ones appear on their own.
 2. Tap an order to see where to pick it up, who to deliver to (workplace and zone), their phone number, what is in the bag and how much cash to collect.
@@ -40,7 +40,7 @@ Sign in with the username and password your restaurant gave you, choosing **Deli
 
 ## Platform administrator
 
-Sign in with **Platform administrator**.
+Choose **I work with FoodGO**, then sign in as **Platform administrator**.
 
 - **Monitoring** — today's orders per restaurant and stage, account totals, and the recent activity log (sign-ins, registrations, assignments, deliveries). Administrators can read this but cannot change orders.
 - **Restaurants** — add a restaurant with its deadline; its zone is Lac 3 / Zone Industrielle Le Kram, the only area FoodGO serves.

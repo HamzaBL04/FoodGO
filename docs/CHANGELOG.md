@@ -17,6 +17,7 @@ All notable changes to FoodGO. Newest at the top. One line per change. Based on 
 - Lab 5 design practical session: filled-in handout (.docx), markdown worksheet, SDD Sections 1–2 skeleton, UC-15 forecast sequence diagram (`docs/lab5-design/`).
 
 ### Changed
+- Sign-in split: a choice screen, then separate customer and staff sign-in pages.
 - Licence: MIT (from the starter template).
 - Creating a restaurant (admin) or a workplace (staff) now requires `serviceZone` (`LAC3_ZI_KRAM`, the only value).
 - Demo data moved into the service area: Dar Lella stays; "Campus Bites" renamed Kram Snack (staff sign-in `staff@kramsnack.tn`); fictional workplaces Lac 3 Business Tower, Lac 3 Tech Hub, Kram Textile Works. Run `npm run seed` to rebuild a local database.

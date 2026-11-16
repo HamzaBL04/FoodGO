@@ -48,7 +48,7 @@ Design sources (read these before designing anything new):
 - `src/repositories/` — **data access**, the only place with SQL; `unitOfWork()` for transactions
 - `src/adapters/` — third-party boundaries: payment (sandbox), SMS/OTP (sandbox), notifications, LLM (Anthropic)
 - `src/db/` — `schema.sql`, `migrations/NNN_*.sql`, `seedData.js`, `seed.js`
-- `src/public/` — the four UIs: `customer.html`, `restaurant.html`, `delivery.html`, `admin.html` + `js/`, `css/`, `fonts/`
+- `src/public/` — the static UIs: the choice screen `index.html`, the sign-in pages `signin-customer.html` / `signin-staff.html`, the four role UIs `customer.html`, `restaurant.html`, `delivery.html`, `admin.html`, plus `js/`, `css/`, `fonts/`
 - `test/unit/`, `test/integration/` — `test/helpers.js` gives `createTestApp()` (in-memory DB, fixed clock: Mon 2 Nov 2026 08:00 Tunis)
 - `docs/` — specs, SDD, UML, ADRs, guides · `scripts/` — setup, docs check, structure tree, traceability, metrics, benchmark · `demo/` — demo video + recorder
 
@@ -99,4 +99,4 @@ Design sources (read these before designing anything new):
 
 ---
 
-_Last updated: 1 Nov 2026 by Hamza Ben Labiedh (with Claude). Review at the start of every work session._
+_Last updated: 16 Nov 2026 by Hamza Ben Labiedh (with opencode/DeepSeek V4.1 Flash). Review at the start of every work session._
