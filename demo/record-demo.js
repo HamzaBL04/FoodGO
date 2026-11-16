@@ -89,7 +89,9 @@ async function main() {
   contexts.push(cust.context);
   const c = cust.page;
   await c.goto(BASE);
-  await scene(c, 'Customers sign in with the phone number their restaurant registered (FR-03, BR-05)', async () => {
+  await scene(c, "Customers choose 'I'm ordering lunch' and sign in with the phone number their restaurant registered (FR-03, BR-05)", async () => {
+    await c.click('a[href="/signin-customer.html"]');
+    await c.waitForSelector('#otp-request');
     await slowType(c, 'input[name=phoneNumber]', '+21620111222');
     await c.click('#otp-request button');
     await c.waitForSelector('#otp-verify:not([hidden])');
@@ -142,7 +144,9 @@ async function main() {
   contexts.push(staff.context);
   const s = staff.page;
   await s.goto(BASE);
-  await scene(s, 'Restaurant staff sign in with a password; each account is bound to one restaurant (FR-29, BR-09)', async () => {
+  await scene(s, "Restaurant staff choose 'I work with FoodGO' and sign in with a password; each account is bound to one restaurant (FR-29, BR-09)", async () => {
+    await s.click('a[href="/signin-staff.html"]');
+    await s.waitForSelector('#password-signin');
     await slowType(s, '#password-signin input[name=identity]', 'staff@darlella.tn');
     await slowType(s, '#password-signin input[name=password]', 'Staff#2026');
     await s.click('#password-signin button');
@@ -194,6 +198,8 @@ async function main() {
   const d = dlv.page;
   await d.goto(BASE);
   await scene(d, 'The delivery person sees only orders assigned to them (FR-20, BR-08)', async () => {
+    await d.click('a[href="/signin-staff.html"]');
+    await d.waitForSelector('#password-signin');
     await d.selectOption('select[name=role]', 'DELIVERY');
     await slowType(d, '#password-signin input[name=identity]', 'karim.d');
     await slowType(d, '#password-signin input[name=password]', 'Delivery#2026');
@@ -225,6 +231,8 @@ async function main() {
   const a = adm.page;
   await a.goto(BASE);
   await scene(a, 'The administrator monitors the platform and its audit trail, read-only on orders (BG-09)', async () => {
+    await a.click('a[href="/signin-staff.html"]');
+    await a.waitForSelector('#password-signin');
     await a.selectOption('select[name=role]', 'ADMIN');
     await slowType(a, '#password-signin input[name=identity]', 'admin@foodgo.tn');
     await slowType(a, '#password-signin input[name=password]', 'Admin#2026');
