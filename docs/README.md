@@ -8,6 +8,7 @@ Mapped to the CS 488 midterm instructions (submission checklist §5 and rubric �
 | **Project proposal PDF** (user stories, acceptance criteria, methodology) | [proposal/PROJECT_PROPOSAL.pdf](proposal/PROJECT_PROPOSAL.pdf) · [source](proposal/PROJECT_PROPOSAL.md) |
 | **Backlog** (prioritised, MoSCoW, story points) + **NFRs** + AI elicitation prompt | [requirements/BACKLOG.md](requirements/BACKLOG.md) · [PDF](requirements/BACKLOG.pdf) |
 | Requirements traceability | [requirements/TRACEABILITY.md](requirements/TRACEABILITY.md) (generated: `npm run traceability`) |
+| **AI-First Activity 1 — SRS with prompt engineering** (5 techniques, normal vs. technique prompt, comparisons) | [activity1-prompt-engineering/ACTIVITY1_PROMPT_ENGINEERING.pdf](activity1-prompt-engineering/ACTIVITY1_PROMPT_ENGINEERING.pdf) · [markdown](activity1-prompt-engineering/ACTIVITY1_PROMPT_ENGINEERING.md) |
 | **Lab 2 — Software Requirements Specification** (complete SRS, Lab 2 template §1–7, traceability to tests) | [lab2-srs/FoodGO_SRS.pdf](lab2-srs/FoodGO_SRS.pdf) · [markdown](lab2-srs/FoodGO_SRS.md) |
 | Lab 3 — Software specification | [lab3-specification/](lab3-specification/) |
 | **Lab 3 — Requirements engineering practical session** (stakeholders, elicitation log, analysis table, final requirements, use cases, peer review, SRS skeleton §4–5) | [lab3-practical/LAB3_REQUIREMENTS_WORKSHEET.pdf](lab3-practical/LAB3_REQUIREMENTS_WORKSHEET.pdf) · [markdown](lab3-practical/LAB3_REQUIREMENTS_WORKSHEET.md) · [SRS skeleton](lab3-practical/SRS_SKELETON.md) |
